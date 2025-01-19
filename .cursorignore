@@ -1,0 +1,51 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+android/
+build/
+ios/
+linux/
+macos/
+windows/
+web/
+
+
+
+# IDE specific
+.idea/
+.vscode/
+.cursorignore
+
+# GIT
+.gitignore
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Dependency related
+pubspec.lock
+
+# Test coverage
+coverage/
+
+# Fastlane specific
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
