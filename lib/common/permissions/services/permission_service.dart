@@ -32,8 +32,6 @@ class PermissionService implements IPermissionService {
         return Permission.storage;
       case PermissionType.microphone:
         return Permission.microphone;
-      default:
-        throw UnimplementedError('Permission not implemented');
     }
   }
 }

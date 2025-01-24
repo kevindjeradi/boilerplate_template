@@ -52,7 +52,7 @@ class AppTextTheme {
     bodyMedium: GoogleFonts.roboto(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground.withOpacity(0.7),
+      color: AppColors.lightOnBackground.withValues(alpha: 0.7),
     ),
     labelLarge: GoogleFonts.roboto(
       fontSize: 14,
@@ -62,7 +62,7 @@ class AppTextTheme {
     bodySmall: GoogleFonts.roboto(
       fontSize: 12,
       fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground.withOpacity(0.6),
+      color: AppColors.lightOnBackground.withValues(alpha: 0.6),
     ),
   );
 
@@ -115,7 +115,7 @@ class AppTextTheme {
     bodyMedium: GoogleFonts.roboto(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground.withOpacity(0.7),
+      color: AppColors.darkOnBackground.withValues(alpha: 0.7),
     ),
     labelLarge: GoogleFonts.roboto(
       fontSize: 14,
@@ -125,7 +125,7 @@ class AppTextTheme {
     bodySmall: GoogleFonts.roboto(
       fontSize: 12,
       fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground.withOpacity(0.6),
+      color: AppColors.darkOnBackground.withValues(alpha: 0.6),
     ),
   );
 }

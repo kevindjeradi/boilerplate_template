@@ -17,11 +17,11 @@ class AppInputDecorationTheme {
       borderSide: const BorderSide(color: AppColors.lightPrimary),
     ),
     labelStyle: TextStyle(
-      color: AppColors.lightOnBackground.withOpacity(0.6),
+      color: AppColors.lightOnBackground.withValues(alpha: 0.6),
       fontSize: AppSizes.textMedium,
     ),
     hintStyle: TextStyle(
-      color: AppColors.lightOnBackground.withOpacity(0.4),
+      color: AppColors.lightOnBackground.withValues(alpha: 0.4),
       fontSize: AppSizes.textMedium,
     ),
     errorStyle: const TextStyle(
@@ -52,11 +52,11 @@ class AppInputDecorationTheme {
       borderSide: const BorderSide(color: AppColors.darkPrimary),
     ),
     labelStyle: TextStyle(
-      color: AppColors.darkOnBackground.withOpacity(0.6),
+      color: AppColors.darkOnBackground.withValues(alpha: 0.6),
       fontSize: AppSizes.textMedium,
     ),
     hintStyle: TextStyle(
-      color: AppColors.darkOnBackground.withOpacity(0.4),
+      color: AppColors.darkOnBackground.withValues(alpha: 0.4),
       fontSize: AppSizes.textMedium,
     ),
     errorStyle: const TextStyle(

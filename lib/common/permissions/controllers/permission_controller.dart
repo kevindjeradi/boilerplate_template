@@ -49,9 +49,6 @@ class PermissionController {
         return localization.storage;
       case PermissionType.microphone:
         return localization.microphone;
-
-      default:
-        return '';
     }
   }
 }

@@ -50,7 +50,7 @@ class ConnectivityController extends GetxController {
         messageText: Text(
           localization.currentlyOffline,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onError.withOpacity(0.9),
+            color: theme.colorScheme.onError.withValues(alpha: 0.9),
             fontSize: AppSizes.textMedium,
           ),
         ),

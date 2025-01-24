@@ -52,6 +52,11 @@
 			<string>tel</string>
 			<string>telprompt</string>
 		</array>
+		<!-- Google Sign in -->
+		<key>GIDClientID</key>
+		<!-- TODO Replace this value: -->
+		<!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
+		<string>524135962701-485mi7r3tvm9586u4pv86os9o3dn7i85.apps.googleusercontent.com</string>
 		<!-- Camera permission -->
 		<key>NSCameraUsageDescription</key>
 		<string>We need access to the camera for taking pictures.</string>

@@ -17,12 +17,12 @@ class AppButtonTheme {
         borderRadius: BorderRadius.circular(AppSizes.marginSmall),
       ),
       elevation: 2,
-      shadowColor: AppColors.lightPrimaryContainer.withOpacity(0.5),
+      shadowColor: AppColors.lightPrimaryContainer.withValues(alpha: 0.5),
     ).copyWith(
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
           if (states.contains(WidgetState.pressed)) {
-            return AppColors.lightPrimaryContainer.withOpacity(0.12);
+            return AppColors.lightPrimaryContainer.withValues(alpha: 0.12);
           }
           return null;
         },
@@ -44,12 +44,12 @@ class AppButtonTheme {
         borderRadius: BorderRadius.circular(AppSizes.marginSmall),
       ),
       elevation: 2,
-      shadowColor: AppColors.darkPrimaryContainer.withOpacity(0.5),
+      shadowColor: AppColors.darkPrimaryContainer.withValues(alpha: 0.5),
     ).copyWith(
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
           if (states.contains(WidgetState.pressed)) {
-            return AppColors.darkPrimaryContainer.withOpacity(0.12);
+            return AppColors.darkPrimaryContainer.withValues(alpha: 0.12);
           }
           return null;
         },
@@ -68,10 +68,10 @@ class AppButtonTheme {
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
           if (states.contains(WidgetState.hovered)) {
-            return AppColors.lightPrimaryContainer.withOpacity(0.04);
+            return AppColors.lightPrimaryContainer.withValues(alpha: 0.04);
           }
           if (states.contains(WidgetState.pressed)) {
-            return AppColors.lightPrimaryContainer.withOpacity(0.12);
+            return AppColors.lightPrimaryContainer.withValues(alpha: 0.12);
           }
           return null;
         },
@@ -90,10 +90,10 @@ class AppButtonTheme {
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
           if (states.contains(WidgetState.hovered)) {
-            return AppColors.darkPrimaryContainer.withOpacity(0.04);
+            return AppColors.darkPrimaryContainer.withValues(alpha: 0.04);
           }
           if (states.contains(WidgetState.pressed)) {
-            return AppColors.darkPrimaryContainer.withOpacity(0.12);
+            return AppColors.darkPrimaryContainer.withValues(alpha: 0.12);
           }
           return null;
         },
