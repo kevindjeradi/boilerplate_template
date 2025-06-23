@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '524135962701',
     projectId: 'boilerplate-bc548',
     authDomain: 'boilerplate-bc548.firebaseapp.com',
-    storageBucket: 'boilerplate-bc548.appspot.com',
+    storageBucket: 'boilerplate-bc548.firebasestorage.app',
     measurementId: 'G-0RHQVLXDXQ',
   );
 
@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
     appId: '1:524135962701:android:6bdffab26fa11f40fc2404',
     messagingSenderId: '524135962701',
     projectId: 'boilerplate-bc548',
-    storageBucket: 'boilerplate-bc548.appspot.com',
+    storageBucket: 'boilerplate-bc548.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -63,7 +63,7 @@ class DefaultFirebaseOptions {
     appId: '1:524135962701:ios:2871af06dc4634f2fc2404',
     messagingSenderId: '524135962701',
     projectId: 'boilerplate-bc548',
-    storageBucket: 'boilerplate-bc548.appspot.com',
+    storageBucket: 'boilerplate-bc548.firebasestorage.app',
     androidClientId: '524135962701-jpuebrk0d5h37gtg5426740af93g42v7.apps.googleusercontent.com',
     iosClientId: '524135962701-485mi7r3tvm9586u4pv86os9o3dn7i85.apps.googleusercontent.com',
     iosBundleId: 'com.example.boilerplateTemplate',
@@ -74,7 +74,7 @@ class DefaultFirebaseOptions {
     appId: '1:524135962701:ios:2871af06dc4634f2fc2404',
     messagingSenderId: '524135962701',
     projectId: 'boilerplate-bc548',
-    storageBucket: 'boilerplate-bc548.appspot.com',
+    storageBucket: 'boilerplate-bc548.firebasestorage.app',
     androidClientId: '524135962701-jpuebrk0d5h37gtg5426740af93g42v7.apps.googleusercontent.com',
     iosClientId: '524135962701-485mi7r3tvm9586u4pv86os9o3dn7i85.apps.googleusercontent.com',
     iosBundleId: 'com.example.boilerplateTemplate',
@@ -86,7 +86,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '524135962701',
     projectId: 'boilerplate-bc548',
     authDomain: 'boilerplate-bc548.firebaseapp.com',
-    storageBucket: 'boilerplate-bc548.appspot.com',
+    storageBucket: 'boilerplate-bc548.firebasestorage.app',
     measurementId: 'G-YGRH21FTVN',
   );
 

@@ -18,7 +18,10 @@ dependencies:
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.4
-  get: ^4.6.6
+  # Riverpod 3.0 moderne avec code generation
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  go_router: ^13.2.0
   google_fonts: ^6.2.1
   country_code_picker_plus: ^0.0.9
   shared_preferences: ^2.3.2
@@ -33,7 +36,14 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   firebase_messaging: ^15.1.6
   timezone: ^0.10.0
-
+  # Logger moderne pour remplacer print()
+  logger: ^2.4.0
+  # Sérialisation moderne
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  # Splash screen natif
+  flutter_native_splash: ^2.4.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -41,6 +51,13 @@ dev_dependencies:
   mockito: ^5.4.4
   build_runner: ^2.4.11
   test: ^1.25.2
+  # Riverpod 3.0 code generation
+  riverpod_generator: ^2.6.2
+  riverpod_lint: ^2.6.1
+  # Sérialisation code generation
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
 
 flutter:
   uses-material-design: true
@@ -75,3 +92,29 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# Configuration du splash screen natif
+flutter_native_splash:
+  # Couleur de fond du splash screen
+  color: "#FFFFFF"
+  
+  # Image du logo au centre
+  image: assets/images/logo.png
+  
+  # Mode sombre (optionnel)
+  color_dark: "#1C1B1F"
+  image_dark: assets/images/logo.png
+  
+  # Configuration Android 12+
+  android_12:
+    image: assets/images/logo.png
+    color: "#FFFFFF"
+    color_dark: "#1C1B1F"
+    icon_background_color: "#FFFFFF"
+    icon_background_color_dark: "#1C1B1F"
+    android_gravity: center
+    ios_content_mode: scaleAspectFit
+    web_image_mode: contain
+  
+  # Plein écran (cache la barre de statut)
+  fullscreen: true

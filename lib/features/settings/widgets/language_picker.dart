@@ -1,31 +1,30 @@
-import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
+import 'package:boilerplate_template/features/settings/states/settings_state.dart';
 
-class LanguagePicker extends StatelessWidget {
-  final AppLocalizations localization;
-
-  const LanguagePicker({super.key, required this.localization});
+class LanguagePicker extends ConsumerWidget {
+  const LanguagePicker({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final SettingsController settingsController = Get.find();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final localization = AppLocalizations.of(context)!;
+    final settings = ref.watch(settingsControllerProvider);
 
-    return Obx(() {
-      return ListTile(
-        leading: const Icon(Icons.language),
-        title: Text(localization.language),
-        subtitle:
-            Text(_getLanguageName(settingsController.currentLocale.value)),
-        trailing: IconButton(
-          icon: const Icon(Icons.arrow_forward_ios),
-          onPressed: () {
-            _showLanguageDialog(context, settingsController, localization);
-          },
-        ),
-      );
-    });
+    // Pattern matching moderne pour obtenir la locale
+    final currentLocale = settings.when(
+      data: (state) => state.currentLocale,
+      loading: () => const Locale('fr'), // défaut pendant le chargement
+      error: (_, __) => const Locale('fr'), // défaut en cas d'erreur
+    );
+
+    return ListTile(
+      title: Text(localization.language),
+      subtitle: Text(_getLanguageName(currentLocale)),
+      trailing: const Icon(Icons.arrow_forward_ios),
+      onTap: () => _showLanguageDialog(context, ref, currentLocale),
+    );
   }
 
   String _getLanguageName(Locale locale) {
@@ -35,12 +34,14 @@ class LanguagePicker extends StatelessWidget {
       case 'fr':
         return 'Français';
       default:
-        return locale.languageCode.toUpperCase();
+        return 'Français';
     }
   }
 
-  void _showLanguageDialog(BuildContext context, SettingsController controller,
-      AppLocalizations localization) {
+  void _showLanguageDialog(
+      BuildContext context, WidgetRef ref, Locale currentLocale) {
+    final localization = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -48,14 +49,16 @@ class LanguagePicker extends StatelessWidget {
           title: Text(localization.selectLanguage),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: controller.supportedLocales.map((Locale locale) {
+            children: SettingsState.supportedLocales.map((locale) {
               return RadioListTile<String>(
                 title: Text(_getLanguageName(locale)),
                 value: locale.languageCode,
-                groupValue: controller.currentLocale.value.languageCode,
+                groupValue: currentLocale.languageCode,
                 onChanged: (String? value) {
                   if (value != null) {
-                    controller.switchLocale(value);
+                    ref
+                        .read(settingsControllerProvider.notifier)
+                        .switchLocale(value);
                     Navigator.of(context).pop();
                   }
                 },

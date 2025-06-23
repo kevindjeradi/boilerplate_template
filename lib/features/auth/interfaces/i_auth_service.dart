@@ -1,21 +1,24 @@
-import 'package:boilerplate_template/common/user/models/user_model.dart';
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:boilerplate_template/shared/exceptions/auth_exceptions.dart';
 
 abstract class IAuthService {
-  Future<UserModel?> signInWithEmailAndPassword(String email, String password);
-  Future<UserModel?> registerWithEmailAndPassword(
-      String email, String password);
+  Stream<User?> get authStateChanges;
+
+  Future<User> signInWithEmailAndPassword(String email, String password);
+
+  Future<User> registerWithEmailAndPassword(String email, String password);
 
   Future<void> verifyPhoneNumber(
     String phoneNumber, {
     required Function(String) codeSent,
-    required Function(FirebaseAuthException) verificationFailed,
+    required Function(AuthException) verificationFailed,
   });
 
-  Future<UserModel?> signInWithSmsCode(String smsCode);
+  Future<User> signInWithSmsCode(String smsCode);
 
-  Future<UserModel?> signInWithGoogle();
+  Future<User?> signInWithGoogle();
 
-  Stream<UserModel?> get authStateChanges;
   Future<void> signOut();
 }

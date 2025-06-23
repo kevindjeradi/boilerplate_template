@@ -5,7 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 class ConnectivityService implements IConnectivityService {
   final Connectivity _connectivity;
   final StreamController<ConnectivityStatus> _connectivityStatusController =
-      StreamController<ConnectivityStatus>();
+      StreamController<ConnectivityStatus>.broadcast();
 
   late final StreamSubscription<List<ConnectivityResult>>
       _connectivitySubscription;
@@ -28,6 +28,8 @@ class ConnectivityService implements IConnectivityService {
   }
 
   void _updateStatus(List<ConnectivityResult> results) {
+    if (_connectivityStatusController.isClosed) return;
+
     if (results.contains(ConnectivityResult.none)) {
       _connectivityStatusController.add(ConnectivityStatus.offline);
     } else {
@@ -41,6 +43,8 @@ class ConnectivityService implements IConnectivityService {
 
   void dispose() {
     _connectivitySubscription.cancel();
-    _connectivityStatusController.close();
+    if (!_connectivityStatusController.isClosed) {
+      _connectivityStatusController.close();
+    }
   }
 }

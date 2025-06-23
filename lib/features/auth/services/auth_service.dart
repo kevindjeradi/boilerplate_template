@@ -1,117 +1,152 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:boilerplate_template/common/user/interfaces/i_user_service.dart';
-import 'package:boilerplate_template/common/user/models/user_model.dart';
+
+import 'package:boilerplate_template/shared/services/app_logger.dart';
 import 'package:boilerplate_template/features/auth/interfaces/i_auth_service.dart';
+import 'package:boilerplate_template/shared/exceptions/auth_exceptions.dart';
+import 'package:boilerplate_template/shared/error_handling/services/error_handling_service.dart';
 
 class AuthService implements IAuthService {
   final FirebaseAuth _firebaseAuth;
-  final IUserService _userService;
   final GoogleSignIn _googleSignIn;
+  final ErrorHandlingService _errorHandlingService;
 
   String? verificationId;
 
-  AuthService(
-    this._userService, {
+  AuthService({
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
     String? clientId,
+    ErrorHandlingService? errorHandlingService,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
         _googleSignIn = googleSignIn ??
             GoogleSignIn(
               clientId: clientId,
-            );
+            ),
+        _errorHandlingService = errorHandlingService ?? ErrorHandlingService();
 
   @override
-  Stream<UserModel?> get authStateChanges {
-    return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser != null) {
-        return await _getUserModel(firebaseUser);
-      }
-      return null;
-    });
+  Stream<User?> get authStateChanges {
+    return _firebaseAuth.authStateChanges();
   }
 
-  Future<UserModel?> _getUserModel(User? firebaseUser) async {
-    if (firebaseUser != null) {
-      UserModel? userModel = await _userService.getUser(firebaseUser.uid);
-      if (userModel == null) {
-        userModel = UserModel(
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          phoneNumber: firebaseUser.phoneNumber,
-          createdAt: DateTime.now(),
-        );
-        await _userService.createUser(userModel);
+  @override
+  Future<User> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      UserCredential userCredential = await _firebaseAuth
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      if (userCredential.user != null) {
+        return userCredential.user!;
+      } else {
+        throw const AuthException('sign-in-failed', 'Failed to sign in user');
       }
-      return userModel;
+    } on FirebaseAuthException catch (e) {
+      throw _errorHandlingService.mapFirebaseAuthException(e);
+    } catch (e) {
+      throw AuthException('unknown', e.toString());
     }
-    return null;
   }
 
   @override
-  Future<UserModel?> signInWithEmailAndPassword(
+  Future<User> registerWithEmailAndPassword(
       String email, String password) async {
-    UserCredential userCredential = await _firebaseAuth
-        .signInWithEmailAndPassword(email: email, password: password);
-    return await _getUserModel(userCredential.user);
-  }
+    try {
+      UserCredential userCredential = await _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-  @override
-  Future<UserModel?> registerWithEmailAndPassword(
-      String email, String password) async {
-    UserCredential userCredential = await _firebaseAuth
-        .createUserWithEmailAndPassword(email: email, password: password);
-    return await _getUserModel(userCredential.user);
+      if (userCredential.user != null) {
+        return userCredential.user!;
+      } else {
+        throw const AuthException(
+            'registration-failed', 'Failed to register user');
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _errorHandlingService.mapFirebaseAuthException(e);
+    } catch (e) {
+      throw AuthException('unknown', e.toString());
+    }
   }
 
   @override
   Future<void> verifyPhoneNumber(
     String phoneNumber, {
     required Function(String) codeSent,
-    required Function(FirebaseAuthException) verificationFailed,
+    required Function(AuthException) verificationFailed,
   }) async {
-    await _firebaseAuth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        UserCredential userCredential =
-            await _firebaseAuth.signInWithCredential(credential);
-        await _getUserModel(userCredential.user);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        verificationFailed(e);
-      },
-      codeSent: (String verId, int? resendToken) {
-        verificationId = verId;
-        codeSent(verId);
-      },
-      codeAutoRetrievalTimeout: (String verId) {
-        verificationId = verId;
-      },
-    );
-  }
-
-  @override
-  Future<UserModel?> signInWithSmsCode(String smsCode) async {
-    if (verificationId == null) {
-      throw Exception('Verification ID is null');
-    }
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: verificationId!,
-      smsCode: smsCode,
-    );
-    UserCredential userCredential =
-        await _firebaseAuth.signInWithCredential(credential);
-    return await _getUserModel(userCredential.user);
-  }
-
-  @override
-  Future<UserModel?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          try {
+            await _firebaseAuth.signInWithCredential(credential);
+          } catch (e) {
+            AppLogger.error('Auto verification failed', e);
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          final authException =
+              _errorHandlingService.mapFirebaseAuthException(e);
+          verificationFailed(authException);
+        },
+        codeSent: (String verId, int? resendToken) {
+          verificationId = verId;
+          codeSent(verId);
+        },
+        codeAutoRetrievalTimeout: (String verId) {
+          verificationId = verId;
+        },
+      );
+    } on FirebaseAuthException catch (e) {
+      throw _errorHandlingService.mapFirebaseAuthException(e);
+    } catch (e) {
+      throw AuthException('unknown', e.toString());
+    }
+  }
+
+  @override
+  Future<User> signInWithSmsCode(String smsCode) async {
+    if (verificationId == null) {
+      throw AuthException.invalidVerificationId();
+    }
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId!,
+        smsCode: smsCode,
+      );
+      UserCredential userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
+
+      if (userCredential.user != null) {
+        return userCredential.user!;
+      } else {
+        throw const AuthException(
+            'sms-sign-in-failed', 'Failed to sign in with SMS');
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _errorHandlingService.mapFirebaseAuthException(e);
+    } catch (e) {
+      throw AuthException('unknown', e.toString());
+    }
+  }
+
+  @override
+  Future<User?> signInWithGoogle() async {
+    try {
+      // Essayer d'abord une connexion silencieuse (sans popup)
+      GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
+
       if (googleUser == null) {
-        // The user canceled the sign-in
-        return null;
+        // Si la connexion silencieuse échoue, forcer la sélection de compte
+        await _googleSignIn.signOut(); // S'assurer qu'on part de zéro
+        googleUser = await _googleSignIn.signIn();
+      }
+
+      if (googleUser == null) {
+        return null; // User cancelled
       }
 
       final GoogleSignInAuthentication googleAuth =
@@ -122,17 +157,32 @@ class AuthService implements IAuthService {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential =
+      UserCredential userCredential =
           await _firebaseAuth.signInWithCredential(credential);
-      return await _getUserModel(userCredential.user);
+
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      AppLogger.error('Firebase error during Google Sign-In', e);
+      throw _errorHandlingService.mapFirebaseAuthException(e);
     } catch (e) {
-      rethrow;
+      if (e is AuthException) {
+        rethrow;
+      }
+      AppLogger.error('Unexpected error during Google Sign-In', e);
+      throw AuthException('unknown', e.toString());
     }
   }
 
   @override
   Future<void> signOut() async {
-    await _firebaseAuth.signOut();
-    await _googleSignIn.signOut();
+    try {
+      await Future.wait([
+        _firebaseAuth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
+    } catch (e) {
+      AppLogger.error('Error during sign out', e);
+      throw AuthException('signout-failed', e.toString());
+    }
   }
 }

@@ -1,81 +1,84 @@
-import 'package:boilerplate_template/common/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/features/auth/widgets/auth_form.dart';
+import 'package:boilerplate_template/features/auth/widgets/custom_text_field.dart';
+import 'package:boilerplate_template/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'auth_form.dart';
-import 'custom_text_field.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:boilerplate_template/features/auth/controllers/auth_controller.dart';
 
 class EmailAuthForm extends AuthForm {
-  EmailAuthForm({super.key});
-
-  final _formKey = GlobalKey<FormState>();
-
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  EmailAuthForm({super.key});
 
   @override
   GlobalKey<FormState> get formKey => _formKey;
 
   @override
-  String get title => authController.isLoginMode.value
-      ? AppLocalizations.of(Get.context!)!.login
-      : AppLocalizations.of(Get.context!)!.register;
+  String get title => 'Email Authentication';
 
   @override
-  bool get isLoading => authController.isLoading.value;
+  String get submitButtonText => 'Sign In';
 
   @override
-  String get submitButtonText => authController.isLoginMode.value
-      ? AppLocalizations.of(Get.context!)!.login
-      : AppLocalizations.of(Get.context!)!.register;
+  VoidCallback get onSubmit => () {
+        // Cette méthode sera appelée par le parent
+      };
 
   @override
-  VoidCallback get onSubmit => _submit;
-
-  @override
-  List<Widget> buildFormFields() {
-    final localization = AppLocalizations.of(Get.context!)!;
+  List<Widget> buildFormFields(BuildContext context, WidgetRef ref) {
+    final authFormState = ref.watch(authFormControllerProvider);
+    final validationService = ref.read(authValidationServiceProvider);
+    final localization = AppLocalizations.of(context)!;
 
     return [
       CustomTextField(
         controller: _emailController,
         label: localization.email,
         hintText: localization.enterYourEmail,
-        prefixIcon: Icons.email,
-        validator: authController.validateEmail,
-        semanticLabel: localization.emailField,
+        keyboardType: TextInputType.emailAddress,
+        validator: (value) => validationService.validateEmail(value, context),
       ),
-      const SizedBox(height: AppSizes.marginSmall),
+      const SizedBox(height: AppSizes.marginMedium),
       CustomTextField(
         controller: _passwordController,
         label: localization.password,
         hintText: localization.enterYourPassword,
-        prefixIcon: Icons.lock,
         isObscure: true,
-        validator: authController.validatePassword,
-        semanticLabel: localization.passwordField,
+        validator: (value) => validationService.validatePassword(
+            value, context, authFormState.isLoginMode),
       ),
-      const SizedBox(height: AppSizes.marginSmall),
-      TextButton(
-        onPressed: _toggleMode,
-        child: Text(authController.isLoginMode.value
-            ? localization.noAccountRegister
-            : localization.alreadyHaveAccountLogin),
+      const SizedBox(height: AppSizes.marginMedium),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(authFormState.isLoginMode
+              ? localization.noAccountRegister
+              : localization.alreadyHaveAccountLogin),
+          TextButton(
+            onPressed: () {
+              ref.read(authFormControllerProvider.notifier).toggleLoginMode();
+            },
+            child: Text(authFormState.isLoginMode
+                ? localization.register
+                : localization.login),
+          ),
+        ],
       ),
     ];
   }
 
-  void _submit() {
-    if (formKey.currentState!.validate()) {
-      authController.authenticateWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+  void handleSubmit(BuildContext context, WidgetRef ref) {
+    if (_formKey.currentState!.validate()) {
+      final authFormState = ref.read(authFormControllerProvider);
+      ref.read(authControllerProvider.notifier).authenticateWithEmail(
+            _emailController.text,
+            _passwordController.text,
+            authFormState.isLoginMode,
+          );
     }
-  }
-
-  void _toggleMode() {
-    authController.toggleLoginMode();
-    _passwordController.clear();
   }
 }

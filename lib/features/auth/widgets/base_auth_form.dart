@@ -1,4 +1,4 @@
-import 'package:boilerplate_template/common/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/app_sizes.dart';
 import 'package:flutter/material.dart';
 
 class BaseAuthForm extends StatelessWidget {
@@ -25,24 +25,27 @@ class BaseAuthForm extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.paddingMedium),
       child: Form(
         key: formKey,
-        child: ListView(
-          children: [
-            Center(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.displayMedium,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSizes.marginMedium),
-            ...children,
-            const SizedBox(height: AppSizes.marginMedium),
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: onSubmit,
-                    child: Text(submitButtonText),
-                  ),
-          ],
+              const SizedBox(height: AppSizes.marginMedium),
+              ...children,
+              const SizedBox(height: AppSizes.marginMedium),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: onSubmit,
+                      child: Text(submitButtonText),
+                    ),
+            ],
+          ),
         ),
       ),
     );

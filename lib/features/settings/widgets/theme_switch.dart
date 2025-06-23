@@ -1,26 +1,34 @@
-import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class ThemeSwitch extends StatelessWidget {
-  final AppLocalizations localization;
+import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
 
-  const ThemeSwitch({required this.localization, super.key});
+class ThemeSwitch extends ConsumerWidget {
+  const ThemeSwitch({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final SettingsController settingsController = Get.find();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final localization = AppLocalizations.of(context)!;
+    final settings = ref.watch(settingsControllerProvider);
 
-    return Obx(() {
-      return SwitchListTile(
-        secondary: const Icon(Icons.brightness_6),
-        title: Text(localization.darkMode),
-        value: settingsController.themeMode.value == ThemeMode.dark,
+    // Pattern matching moderne pour obtenir le thème
+    final themeMode = settings.when(
+      data: (state) => state.themeMode,
+      loading: () => ThemeMode.dark, // défaut pendant le chargement
+      error: (_, __) => ThemeMode.dark, // défaut en cas d'erreur
+    );
+
+    final isDarkMode = themeMode == ThemeMode.dark;
+
+    return ListTile(
+      title: Text(localization.darkMode),
+      trailing: Switch(
+        value: isDarkMode,
         onChanged: (bool value) {
-          settingsController.toggleTheme();
+          ref.read(settingsControllerProvider.notifier).toggleTheme();
         },
-      );
-    });
+      ),
+    );
   }
 }

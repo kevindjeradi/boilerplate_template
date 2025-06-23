@@ -1,0 +1,36 @@
+targets:
+  $default:
+    builders:
+      # Configuration pour Riverpod code generation
+      riverpod_generator:
+        enabled: true
+        options:
+          # Generate provider classes
+          provider_class: true
+          # Use latest Riverpod 3.0 features
+          riverpod_version: ^2.6.0
+      
+      # Configuration pour Freezed
+      freezed:
+        enabled: true
+        options:
+          # Generate copyWith, toString, hashCode, ==
+          copy_with: true
+          equal: true
+          to_string: true
+      
+      # Configuration pour JSON serialization
+      json_serializable:
+        enabled: true
+        options:
+          # Configuration moderne pour JSON
+          any_map: false
+          checked: false
+          create_factory: true
+          create_to_json: true
+          disallow_unrecognized_keys: false
+          explicit_to_json: true
+          field_rename: none
+          generic_argument_factories: false
+          ignore_unannotated: false
+          include_if_null: true 

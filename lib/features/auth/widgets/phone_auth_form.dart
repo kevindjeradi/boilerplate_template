@@ -1,127 +1,163 @@
-import 'package:boilerplate_template/common/constants/app_sizes.dart';
-import 'package:country_code_picker_plus/country_code_picker_plus.dart'; // Correct import
+import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/exceptions/auth_exceptions.dart';
+import 'package:boilerplate_template/shared/extensions/exception_extensions.dart';
+import 'package:country_code_picker_plus/country_code_picker_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'auth_form.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'custom_text_field.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:boilerplate_template/features/auth/controllers/auth_controller.dart';
+import 'package:boilerplate_template/features/auth/states/auth_state.dart';
+import 'package:boilerplate_template/features/auth/widgets/auth_form.dart';
+import 'package:boilerplate_template/features/auth/providers/auth_providers.dart';
 
 class PhoneAuthForm extends AuthForm {
-  PhoneAuthForm({super.key});
+  const PhoneAuthForm({super.key});
 
-  final _formKey = GlobalKey<FormState>();
-
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _smsCodeController = TextEditingController();
-
-  final RxString _selectedCountryCode = '+33'.obs;
+  static final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  static final TextEditingController _phoneController = TextEditingController();
+  static final TextEditingController _smsController = TextEditingController();
+  static String _selectedCountryCode = '+33';
 
   @override
   GlobalKey<FormState> get formKey => _formKey;
 
   @override
-  String get title => authController.isLoginMode.value
-      ? AppLocalizations.of(Get.context!)!.login
-      : AppLocalizations.of(Get.context!)!.register;
+  String get title => 'Phone Authentication';
 
   @override
-  bool get isLoading => authController.isLoading.value;
+  String get submitButtonText => 'Verify Phone';
 
   @override
-  String get submitButtonText => authController.isCodeSent.value
-      ? AppLocalizations.of(Get.context!)!.submitCode
-      : AppLocalizations.of(Get.context!)!.verifyPhoneNumber;
+  VoidCallback get onSubmit => () {
+        if (_formKey.currentState!.validate()) {
+          // Logic handled in buildFormFields
+        }
+      };
 
   @override
-  VoidCallback get onSubmit =>
-      authController.isCodeSent.value ? _submitCode : _verifyPhone;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    final authFormState = ref.watch(authFormControllerProvider);
+    final validationService = ref.read(authValidationServiceProvider);
+    final localization = AppLocalizations.of(context)!;
 
-  @override
-  List<Widget> buildFormFields() {
-    final localization = AppLocalizations.of(Get.context!)!;
+    final isLoading = authState is AuthLoading;
+    final isCodeSent = authState is AuthCodeSent || authFormState.isCodeSent;
 
-    return [
-      CustomTextField(
-        controller: _phoneController,
-        label: localization.phoneNumber,
-        hintText: localization.enterYourPhoneNumber,
-        keyboardType: TextInputType.number,
-        validator: authController.validatePhoneNumber,
-        semanticLabel: localization.phoneNumber,
-        decoration: InputDecoration(
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-            child: CountryCodePicker(
-              onChanged: (Country country) {
-                _selectedCountryCode.value = country.dialCode;
-                _printCountryCode(country);
-              },
-              onInit: (Country? country) {
-                if (country != null) {
-                  _selectedCountryCode.value = country.dialCode;
-                  _printCountryCode(country);
-                }
-              },
-              initialSelection: 'FR',
-              favorite: const ['+33', 'FR'],
-              showFlag: true,
-              showCountryOnly: false,
-              showOnlyCountryWhenClosed: false,
-              alignLeft: false,
-              mode: CountryCodePickerMode.bottomSheet,
-              searchDecoration: InputDecoration(
-                hintText: localization.country,
-              ),
-              flagWidth: 24.0,
-              textStyle: const TextStyle(
-                fontSize: AppSizes.textMedium,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingSmall,
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Phone Authentication',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 0.0),
-          isDense: true,
+            const SizedBox(height: AppSizes.marginLarge),
+            if (!isCodeSent) ...[
+              // Phone number input
+              Row(
+                children: [
+                  CountryCodePicker(
+                    onChanged: (country) {
+                      _selectedCountryCode = country.dialCode;
+                    },
+                    initialSelection: 'FR',
+                    favorite: const ['+33', 'FR'],
+                    showCountryOnly: false,
+                    showOnlyCountryWhenClosed: false,
+                    alignLeft: false,
+                  ),
+                  const SizedBox(width: AppSizes.marginSmall),
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _phoneController,
+                      label: localization.phoneNumber,
+                      keyboardType: TextInputType.phone,
+                      validator: (value) =>
+                          validationService.validatePhoneNumber(value, context),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSizes.marginLarge),
+
+              ElevatedButton(
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          try {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .verifyPhoneNumber(
+                                    '$_selectedCountryCode${_phoneController.text}');
+                          } on AuthException catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toLocalizedMessage(context)),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : Text(localization.sendVerificationCode),
+              ),
+            ] else ...[
+              // SMS verification input
+              CustomTextField(
+                controller: _smsController,
+                label: localization.smsCode,
+                keyboardType: TextInputType.number,
+                validator: (value) =>
+                    validationService.validateSmsCode(value, context),
+              ),
+              const SizedBox(height: AppSizes.marginLarge),
+
+              ElevatedButton(
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          try {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .verifySmsCode(_smsController.text);
+                          } on AuthException catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toLocalizedMessage(context)),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : Text(localization.verify),
+              ),
+            ],
+          ],
         ),
       ),
-      const SizedBox(height: AppSizes.marginSmall),
-      Obx(() {
-        if (authController.isCodeSent.value) {
-          return CustomTextField(
-            controller: _smsCodeController,
-            label: localization.smsCode,
-            hintText: localization.enterSmsCode,
-            prefixIcon: Icons.message,
-            keyboardType: TextInputType.number,
-            validator: authController.validateSmsCode,
-            semanticLabel: localization.smsCodeField,
-          );
-        } else {
-          return const SizedBox.shrink();
-        }
-      }),
-    ];
+    );
   }
 
-  void _verifyPhone() {
-    if (formKey.currentState!.validate()) {
-      final fullPhoneNumber =
-          '${_selectedCountryCode.value}${_phoneController.text.trim()}';
-      authController.verifyPhoneNumber(fullPhoneNumber);
-    }
-  }
-
-  void _submitCode() {
-    if (formKey.currentState!.validate()) {
-      authController.verifySmsCode(_smsCodeController.text.trim());
-    }
-  }
-
-  void _printCountryCode(Country country) {
-    debugPrint('Country Name: ${country.name}');
-    debugPrint('Country Code: ${country.code}');
-    debugPrint('Dial Code: ${country.dialCode}');
+  @override
+  List<Widget> buildFormFields(BuildContext context, WidgetRef ref) {
+    // Cette méthode n'est pas utilisée car on override build complètement
+    return [];
   }
 }

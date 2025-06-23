@@ -1,123 +1,85 @@
-import 'package:boilerplate_template/features/notifications/controllers/local_notifications_controller.dart';
-import 'package:boilerplate_template/features/notifications/interfaces/i_local_notifications_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 
-import 'package:boilerplate_template/common/error_handling/services/error_handling_service.dart';
-import 'package:boilerplate_template/common/permissions/controllers/permission_controller.dart';
-import 'package:boilerplate_template/common/permissions/interfaces/i_permission_service.dart';
-import 'package:boilerplate_template/common/theme/app_theme.dart';
-import 'package:boilerplate_template/common/user/controllers/user_controller.dart';
-import 'package:boilerplate_template/common/user/interfaces/i_user_service.dart';
-import 'package:boilerplate_template/common/user/services/user_service.dart';
-import 'package:boilerplate_template/features/api/controllers/api_controller.dart';
-import 'package:boilerplate_template/features/api/interfaces/i_api_service.dart';
-import 'package:boilerplate_template/features/api/services/api_service.dart';
-import 'package:boilerplate_template/features/auth/controllers/auth_controller.dart';
-import 'package:boilerplate_template/features/auth/interfaces/i_auth_service.dart';
-import 'package:boilerplate_template/features/auth/screens/auth_screen.dart';
-import 'package:boilerplate_template/features/auth/services/auth_service.dart';
-import 'package:boilerplate_template/features/connectivity/controllers/connectivity_controller.dart';
-import 'package:boilerplate_template/features/connectivity/interfaces/i_connectivity_service.dart';
-import 'package:boilerplate_template/features/connectivity/services/connectivity_service.dart';
-import 'package:boilerplate_template/features/notifications/controllers/push_notifications_controller.dart';
-import 'package:boilerplate_template/features/notifications/interfaces/i_push_notifications_service.dart';
-import 'package:boilerplate_template/features/notifications/services/local_notifications_service.dart';
-import 'package:boilerplate_template/features/notifications/services/push_notifications_service.dart';
+import 'package:boilerplate_template/shared/services/app_logger.dart';
+import 'package:boilerplate_template/core/theme/app_theme.dart';
 import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
 import 'package:boilerplate_template/firebase_options.dart';
-import 'package:boilerplate_template/home_screen.dart';
-import 'package:boilerplate_template/router/app_router.dart';
-import 'package:boilerplate_template/storage/local_storage/interfaces/i_storage_service.dart';
-import 'package:boilerplate_template/storage/local_storage/services/storage_service.dart';
-
-import 'common/permissions/services/permission_service.dart';
+import 'package:boilerplate_template/core/router/app_router.dart';
+import 'package:boilerplate_template/features/auth/services/auth_effects_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Préserver le splash screen pendant l'initialisation
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  AppLogger.info('🚀 Starting application initialization');
+
+  // Initialize timezone
   tz.initializeTimeZones();
+  AppLogger.info('✅ Timezone initialized');
 
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  AppLogger.info('✅ Firebase initialized');
 
-  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+  // Configure Firebase Crashlytics only on native mobile
+  if (!kIsWeb) {
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    AppLogger.info('✅ Crashlytics configured');
+  }
 
+  // Load environment variables
   await dotenv.load(fileName: ".env");
-  final String? googleClientId = dotenv.env['GOOGLE_CLIENT_ID'];
+  AppLogger.info('✅ Environment variables loaded');
 
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  AppLogger.info('🎯 Starting app with ProviderScope');
 
-  final userService = UserService();
-  final authService = AuthService(userService);
-  final errorHandlingService = ErrorHandlingService();
-
-  Get.lazyPut<IStorageService>(() => StorageService(prefs));
-  Get.lazyPut<IConnectivityService>(() => ConnectivityService());
-  Get.lazyPut<IApiService>(() => ApiService(prefs));
-  Get.lazyPut<IUserService>(() => UserService());
-  Get.lazyPut<IAuthService>(() => AuthService(
-        Get.find<IUserService>(),
-        googleSignIn: GoogleSignIn(
-          clientId: googleClientId,
-        ),
-      ));
-  Get.lazyPut<ErrorHandlingService>(() => ErrorHandlingService());
-  Get.lazyPut<IPermissionService>(() => PermissionService());
-  Get.lazyPut<ILocalNotificationsService>(() => LocalNotificationsService());
-  Get.lazyPut<IPushNotificationsService>(() => PushNotificationsService());
-
-  Get.lazyPut<UserController>(() => UserController(Get.find<IUserService>()));
-  await Get.putAsync<SettingsController>(() async {
-    final controller = SettingsController(Get.find<IStorageService>());
-    await controller.loadSettings();
-    return controller;
-  });
-  Get.lazyPut<ApiController>(() => ApiController(
-        Get.find<IApiService>(),
-        Get.find<ErrorHandlingService>(),
-      ));
-  Get.put(ConnectivityController(Get.find()));
-  Get.put(AuthController(authService, errorHandlingService, Get.find()));
-  Get.put(PermissionController(Get.find()));
-  Get.put(LocalNotificationsController(Get.find<ILocalNotificationsService>()));
-  Get.put(PushNotificationsController(Get.find<IPushNotificationsService>()));
-
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final SettingsController settingsController = Get.find();
-    final AuthController authController = Get.find();
+  Widget build(BuildContext context, WidgetRef ref) {
+    AppLogger.info('🎨 Building MyApp widget');
 
-    return GetMaterialApp(
+    // Initialiser seulement les effets d'auth (nécessaire)
+    ref.watch(authEffectsServiceProvider);
+
+    // Déclencher l'init des settings en arrière-plan SANS rebuild
+    ref.read(settingsControllerProvider);
+
+    // Utilisation des providers pour locale et thème
+    final router = ref.watch(routerProvider);
+    final currentLocale = ref.watch(currentLocaleProvider);
+    final currentThemeMode = ref.watch(currentThemeModeProvider);
+
+    return MaterialApp.router(
       title: 'Flutter App Boilerplate',
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: settingsController.currentLocale.value,
-      getPages: AppRouter.routes,
+      locale: currentLocale,
+      routerConfig: router,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: settingsController.themeMode.value,
-      home: Obx(() {
-        return authController.user.value != null
-            ? const HomeScreen()
-            : AuthScreen();
-      }),
+      themeMode: currentThemeMode,
     );
   }
 }

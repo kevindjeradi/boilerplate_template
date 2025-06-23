@@ -1,177 +1,283 @@
-import 'package:boilerplate_template/common/error_handling/services/error_handling_service.dart';
-import 'package:boilerplate_template/common/user/controllers/user_controller.dart';
-import 'package:boilerplate_template/features/auth/interfaces/i_auth_service.dart';
-import 'package:boilerplate_template/common/user/models/user_model.dart';
+import 'dart:async';
+
+import 'package:boilerplate_template/shared/exceptions/auth_exceptions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:get/get.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class AuthController extends GetxController {
-  final IAuthService _authService;
-  final ErrorHandlingService _errorHandlingService;
-  final UserController _userController;
+import 'package:boilerplate_template/features/auth/interfaces/i_auth_service.dart';
+import 'package:boilerplate_template/shared/user/models/user_model.dart';
+import 'package:boilerplate_template/shared/user/interfaces/i_user_service.dart';
+import 'package:boilerplate_template/features/auth/states/auth_state.dart';
+import 'package:boilerplate_template/features/auth/providers/auth_providers.dart';
+import 'package:boilerplate_template/shared/providers/shared_providers.dart';
+import 'package:boilerplate_template/shared/services/app_logger.dart';
 
-  Rxn<UserModel> user = Rxn<UserModel>();
-  RxBool isLoading = false.obs;
-  RxString errorMessage = ''.obs;
-  RxBool isLoginMode = true.obs;
-  RxBool isCodeSent = false.obs;
-  RxInt selectedAuthMethod = 0.obs;
+part 'auth_controller.g.dart';
+part 'auth_controller.freezed.dart';
 
-  AuthController(
-      this._authService, this._errorHandlingService, this._userController);
+// Auth form state avec Freezed
+@freezed
+class AuthFormState with _$AuthFormState {
+  const factory AuthFormState({
+    @Default(true) bool isLoginMode,
+    @Default(false) bool isCodeSent,
+    @Default(0) int selectedAuthMethod,
+    String? verificationId,
+  }) = _AuthFormState;
+}
+
+// Controller moderne avec Riverpod 3.0 - État simple AuthState (pas AsyncValue)
+@Riverpod(keepAlive: true)
+class AuthController extends _$AuthController {
+  late final IAuthService _authService;
+  late final IUserService _userService;
+  StreamSubscription<User?>? _authStateSubscription;
+
+  // Flag pour éviter les conflits lors de l'auth manuelle Google
+  bool _isManualGoogleSignInInProgress = false;
 
   @override
-  void onInit() {
-    super.onInit();
-    _authService.authStateChanges.listen((userModel) {
-      user.value = userModel;
-      if (userModel != null) {
-        _userController.fetchCurrentUser(userModel.id);
+  AuthState build() {
+    // Initialisation des services via providers modernes
+    _authService = ref.read(authServiceProvider);
+    _userService = ref.read(userServiceProvider);
+
+    // Setup du listener auth state
+    _setupAuthStateListener();
+
+    // Cleanup automatique quand le provider est disposé
+    ref.onDispose(() {
+      _authStateSubscription?.cancel();
+    });
+
+    return const AuthState.initial();
+  }
+
+  void _setupAuthStateListener() {
+    _authStateSubscription =
+        _authService.authStateChanges.listen((firebaseUser) async {
+      if (!ref.exists(authControllerProvider)) return; // Guard contre dispose
+
+      // Ignorer les changements d'état pendant l'authentification Google manuelle
+      if (_isManualGoogleSignInInProgress) {
+        return;
+      }
+
+      if (firebaseUser != null) {
+        // Orchestration business : récupérer/créer UserModel
+        try {
+          final userModel = await _getOrCreateUserModel(firebaseUser);
+          if (ref.exists(authControllerProvider)) {
+            state = AuthState.authenticated(userModel.id);
+          }
+        } catch (e) {
+          AppLogger.error('Failed to get/create user model', e);
+          if (ref.exists(authControllerProvider)) {
+            state = const AuthState.unauthenticated();
+          }
+        }
       } else {
-        _userController.currentUser.value = null;
+        if (ref.exists(authControllerProvider)) {
+          state = const AuthState.unauthenticated();
+        }
       }
     });
   }
 
-  void resetState() {
-    isLoading.value = false;
-    errorMessage.value = '';
-    isLoginMode.value = true;
-    isCodeSent.value = false;
+  // Orchestration business centralisée
+  Future<UserModel> _getOrCreateUserModel(User firebaseUser) async {
+    UserModel? userModel = await _userService.getUser(firebaseUser.uid);
+
+    if (userModel == null) {
+      userModel = UserModel(
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        phoneNumber: firebaseUser.phoneNumber,
+        createdAt: DateTime.now(),
+      );
+      await _userService.createUser(userModel);
+    }
+
+    return userModel;
   }
 
-  void toggleLoginMode() {
-    isLoginMode.value = !isLoginMode.value;
-  }
+  // MÉTHODES SIMPLIFIÉES AVEC ORCHESTRATION
 
-  void setSelectedAuthMethod(int index) {
-    selectedAuthMethod.value = index;
-    resetState();
-  }
+  Future<void> authenticateWithEmail(
+      String email, String password, bool isLoginMode) async {
+    if (!_canPerformOperation()) return;
 
-  Future<void> authenticateWithEmail(String email, String password) async {
-    isLoading.value = true;
-    errorMessage.value = '';
+    state = const AuthState.loading();
+
     try {
-      UserModel? userModel;
-      if (isLoginMode.value) {
-        userModel =
-            await _authService.signInWithEmailAndPassword(email, password);
-      } else {
-        userModel =
-            await _authService.registerWithEmailAndPassword(email, password);
+      final firebaseUser = isLoginMode
+          ? await _authService.signInWithEmailAndPassword(email, password)
+          : await _authService.registerWithEmailAndPassword(email, password);
+
+      if (_canPerformOperation()) {
+        // Orchestration business
+        final userModel = await _getOrCreateUserModel(firebaseUser);
+        state = AuthState.authenticated(userModel.id);
       }
-      if (userModel != null) {
-        user.value = userModel;
-        Get.offAllNamed('/home');
+    } on AuthException catch (e) {
+      if (_canPerformOperation()) {
+        AppLogger.error('Email authentication failed', e);
+        state = const AuthState.unauthenticated();
+        rethrow;
       }
-    } catch (e) {
-      errorMessage.value =
-          _errorHandlingService.getErrorMessage(e as Exception);
-    } finally {
-      isLoading.value = false;
     }
   }
 
   Future<void> signInWithGoogle() async {
-    isLoading.value = true;
-    errorMessage.value = '';
+    if (!_canPerformOperation()) return;
+
+    state = const AuthState.loading();
+
+    // Activer le flag pour éviter les conflits avec le listener
+    _isManualGoogleSignInInProgress = true;
+
     try {
-      UserModel? userModel = await _authService.signInWithGoogle();
-      if (userModel != null) {
-        user.value = userModel;
-        Get.offAllNamed('/home');
+      final firebaseUser = await _authService.signInWithGoogle();
+
+      if (_canPerformOperation()) {
+        if (firebaseUser != null) {
+          // Orchestration business
+          final userModel = await _getOrCreateUserModel(firebaseUser);
+          state = AuthState.authenticated(userModel.id);
+        } else {
+          state = const AuthState.unauthenticated();
+        }
       }
-    } catch (e) {
-      errorMessage.value =
-          _errorHandlingService.getErrorMessage(e as Exception);
+    } on AuthException catch (e) {
+      if (_canPerformOperation()) {
+        AppLogger.error('Google Sign-In error', e);
+        state = const AuthState.unauthenticated();
+        rethrow;
+      }
     } finally {
-      isLoading.value = false;
+      // Désactiver le flag une fois l'opération terminée
+      _isManualGoogleSignInInProgress = false;
     }
   }
 
   Future<void> verifyPhoneNumber(String phoneNumber) async {
-    isLoading.value = true;
-    errorMessage.value = '';
+    if (!_canPerformOperation()) return;
+
+    state = const AuthState.loading();
+
     try {
       await _authService.verifyPhoneNumber(
         phoneNumber,
         codeSent: (String verificationId) {
-          isCodeSent.value = true;
-          isLoading.value = false;
+          if (_canPerformOperation()) {
+            state = AuthState.codeSent(verificationId);
+          }
         },
-        verificationFailed: (FirebaseAuthException e) {
-          errorMessage.value = _errorHandlingService.getErrorMessage(e);
-          isLoading.value = false;
+        verificationFailed: (AuthException error) {
+          if (_canPerformOperation()) {
+            AppLogger.error('Phone verification failed', error);
+            state = const AuthState.unauthenticated();
+          }
         },
       );
-    } catch (e) {
-      errorMessage.value =
-          _errorHandlingService.getErrorMessage(e as Exception);
-      isLoading.value = false;
+    } on AuthException catch (e) {
+      if (_canPerformOperation()) {
+        AppLogger.error('Phone verification failed', e);
+        state = const AuthState.unauthenticated();
+        rethrow;
+      }
     }
   }
 
   Future<void> verifySmsCode(String smsCode) async {
-    isLoading.value = true;
-    errorMessage.value = '';
+    if (!_canPerformOperation()) return;
+
+    state = const AuthState.loading();
+
     try {
-      UserModel? userModel = await _authService.signInWithSmsCode(smsCode);
-      if (userModel != null) {
-        user.value = userModel;
-        isCodeSent.value = false;
-        Get.offAllNamed('/home');
+      final firebaseUser = await _authService.signInWithSmsCode(smsCode);
+      if (_canPerformOperation()) {
+        // Orchestration business
+        final userModel = await _getOrCreateUserModel(firebaseUser);
+        state = AuthState.authenticated(userModel.id);
       }
-    } catch (e) {
-      errorMessage.value =
-          _errorHandlingService.getErrorMessage(e as Exception);
-    } finally {
-      isLoading.value = false;
+    } on AuthException catch (e) {
+      if (_canPerformOperation()) {
+        AppLogger.error('SMS verification failed', e);
+        state = const AuthState.unauthenticated();
+        rethrow;
+      }
     }
   }
 
   Future<void> signOut() async {
-    await _authService.signOut();
-    user.value = null;
-    Get.offAllNamed('/auth');
+    try {
+      await _authService.signOut();
+      // L'état sera mis à jour via le listener authStateChanges
+    } on AuthException catch (e) {
+      AppLogger.error('Sign out failed', e);
+      rethrow;
+    }
   }
 
-  String? validateEmail(String? value) {
-    final localization = AppLocalizations.of(Get.context!)!;
-    if (value == null || value.isEmpty) {
-      return localization.pleaseEnterYourEmail;
-    } else if (!GetUtils.isEmail(value)) {
-      return localization.pleaseEnterValidEmail;
-    }
-    return null;
+  void resetState() {
+    state = const AuthState.initial();
   }
 
-  String? validatePassword(String? value) {
-    final localization = AppLocalizations.of(Get.context!)!;
-    if (value == null || value.isEmpty) {
-      return localization.pleaseEnterYourPassword;
-    } else if (!isLoginMode.value && value.length < 6) {
-      return localization.passwordMustBeAtLeast6Characters;
-    }
-    return null;
+  // Guard pour vérifier si on peut encore effectuer des opérations
+  bool _canPerformOperation() {
+    return ref.exists(authControllerProvider);
+  }
+}
+
+// Controller séparé pour l'état du formulaire - RESPONSABILITÉ UNIQUE: UI FORM
+@riverpod
+class AuthFormController extends _$AuthFormController {
+  @override
+  AuthFormState build() {
+    return const AuthFormState();
   }
 
-  String? validatePhoneNumber(String? value) {
-    final localization = AppLocalizations.of(Get.context!)!;
-    if (value == null || value.isEmpty) {
-      return localization.pleaseEnterYourPhoneNumber;
-    } else if (!GetUtils.isPhoneNumber(value)) {
-      return localization.pleaseEnterValidPhoneNumber;
-    }
-    return null;
+  void toggleLoginMode() {
+    state = state.copyWith(isLoginMode: !state.isLoginMode);
   }
 
-  String? validateSmsCode(String? value) {
-    final localization = AppLocalizations.of(Get.context!)!;
-    if (value == null || value.isEmpty) {
-      return localization.pleaseEnterSmsCode;
-    }
-    return null;
+  void setSelectedAuthMethod(int index) {
+    state = state.copyWith(
+      selectedAuthMethod: index,
+      isCodeSent: false,
+    );
   }
+
+  void setCodeSent(bool isCodeSent, {String? verificationId}) {
+    state = state.copyWith(
+      isCodeSent: isCodeSent,
+      verificationId: verificationId,
+    );
+  }
+
+  void resetState() {
+    state = const AuthFormState();
+  }
+}
+
+// Helper providers simplifiés
+@riverpod
+bool isAuthenticated(Ref ref) {
+  final authState = ref.watch(authControllerProvider);
+  return authState is AuthAuthenticated;
+}
+
+@riverpod
+String? currentAuthUserId(Ref ref) {
+  final authState = ref.watch(authControllerProvider);
+  return authState is AuthAuthenticated ? authState.userId : null;
+}
+
+@riverpod
+bool isAuthLoading(Ref ref) {
+  final authState = ref.watch(authControllerProvider);
+  return authState is AuthLoading;
 }
