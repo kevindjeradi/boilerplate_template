@@ -1,4 +1,4 @@
-import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
 import 'package:boilerplate_template/features/auth/widgets/base_auth_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +31,7 @@ abstract class AuthForm extends ConsumerWidget {
       onSubmit: onSubmit,
       children: [
         ...buildFormFields(context, ref),
-        const SizedBox(height: AppSizes.marginSmall),
+        SizedBox(height: context.marginSmall),
       ],
     );
   }

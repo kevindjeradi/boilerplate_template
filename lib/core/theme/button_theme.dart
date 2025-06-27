@@ -1,4 +1,3 @@
-import 'package:boilerplate_template/shared/constants/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'colors.dart';
 
@@ -8,13 +7,13 @@ class AppButtonTheme {
     style: ElevatedButton.styleFrom(
       foregroundColor: AppColors.lightOnPrimary,
       backgroundColor: AppColors.lightPrimary,
-      minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
+      minimumSize: const Size(double.infinity, 48.0),
       textStyle: const TextStyle(
-        fontSize: AppSizes.textMedium,
+        fontSize: 16.0,
         fontWeight: FontWeight.w600,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.marginSmall),
+        borderRadius: BorderRadius.circular(8.0),
       ),
       elevation: 2,
       shadowColor: AppColors.lightPrimaryContainer.withValues(alpha: 0.5),
@@ -35,13 +34,13 @@ class AppButtonTheme {
     style: ElevatedButton.styleFrom(
       foregroundColor: AppColors.darkOnPrimary,
       backgroundColor: AppColors.darkPrimary,
-      minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
+      minimumSize: const Size(double.infinity, 48.0),
       textStyle: const TextStyle(
-        fontSize: AppSizes.textMedium,
+        fontSize: 16.0,
         fontWeight: FontWeight.w600,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.marginSmall),
+        borderRadius: BorderRadius.circular(8.0),
       ),
       elevation: 2,
       shadowColor: AppColors.darkPrimaryContainer.withValues(alpha: 0.5),
@@ -61,7 +60,7 @@ class AppButtonTheme {
     style: TextButton.styleFrom(
       foregroundColor: AppColors.lightPrimary,
       textStyle: const TextStyle(
-        fontSize: AppSizes.textMedium,
+        fontSize: 16.0,
         fontWeight: FontWeight.w500,
       ),
     ).copyWith(
@@ -83,7 +82,7 @@ class AppButtonTheme {
     style: TextButton.styleFrom(
       foregroundColor: AppColors.darkPrimary,
       textStyle: const TextStyle(
-        fontSize: AppSizes.textMedium,
+        fontSize: 16.0,
         fontWeight: FontWeight.w500,
       ),
     ).copyWith(

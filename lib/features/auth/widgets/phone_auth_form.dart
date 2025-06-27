@@ -1,4 +1,4 @@
-import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
 import 'package:boilerplate_template/shared/exceptions/auth_exceptions.dart';
 import 'package:boilerplate_template/shared/extensions/exception_extensions.dart';
 import 'package:country_code_picker_plus/country_code_picker_plus.dart';
@@ -46,7 +46,7 @@ class PhoneAuthForm extends AuthForm {
     final isCodeSent = authState is AuthCodeSent || authFormState.isCodeSent;
 
     return Padding(
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+      padding: EdgeInsets.all(context.paddingMedium),
       child: Form(
         key: _formKey,
         child: Column(
@@ -57,7 +57,7 @@ class PhoneAuthForm extends AuthForm {
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.marginLarge),
+            SizedBox(height: context.marginLarge),
             if (!isCodeSent) ...[
               // Phone number input
               Row(
@@ -72,7 +72,7 @@ class PhoneAuthForm extends AuthForm {
                     showOnlyCountryWhenClosed: false,
                     alignLeft: false,
                   ),
-                  const SizedBox(width: AppSizes.marginSmall),
+                  SizedBox(width: context.marginSmall),
                   Expanded(
                     child: CustomTextField(
                       controller: _phoneController,
@@ -84,7 +84,7 @@ class PhoneAuthForm extends AuthForm {
                   ),
                 ],
               ),
-              const SizedBox(height: AppSizes.marginLarge),
+              SizedBox(height: context.marginLarge),
 
               ElevatedButton(
                 onPressed: isLoading
@@ -121,7 +121,7 @@ class PhoneAuthForm extends AuthForm {
                 validator: (value) =>
                     validationService.validateSmsCode(value, context),
               ),
-              const SizedBox(height: AppSizes.marginLarge),
+              SizedBox(height: context.marginLarge),
 
               ElevatedButton(
                 onPressed: isLoading

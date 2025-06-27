@@ -1,4 +1,4 @@
-import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
 import 'package:flutter/material.dart';
 
 class BaseAuthForm extends StatelessWidget {
@@ -22,7 +22,7 @@ class BaseAuthForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+      padding: EdgeInsets.all(context.paddingMedium),
       child: Form(
         key: formKey,
         child: SingleChildScrollView(
@@ -35,9 +35,9 @@ class BaseAuthForm extends StatelessWidget {
                   style: Theme.of(context).textTheme.displayMedium,
                 ),
               ),
-              const SizedBox(height: AppSizes.marginMedium),
+              SizedBox(height: context.marginMedium),
               ...children,
-              const SizedBox(height: AppSizes.marginMedium),
+              SizedBox(height: context.marginMedium),
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(

@@ -1,4 +1,4 @@
-import 'package:boilerplate_template/shared/constants/app_sizes.dart';
+import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
 import 'package:boilerplate_template/features/auth/widgets/auth_form.dart';
 import 'package:boilerplate_template/features/auth/widgets/custom_text_field.dart';
 import 'package:boilerplate_template/features/auth/providers/auth_providers.dart';
@@ -42,7 +42,7 @@ class EmailAuthForm extends AuthForm {
         keyboardType: TextInputType.emailAddress,
         validator: (value) => validationService.validateEmail(value, context),
       ),
-      const SizedBox(height: AppSizes.marginMedium),
+      SizedBox(height: context.marginMedium),
       CustomTextField(
         controller: _passwordController,
         label: localization.password,
@@ -51,7 +51,7 @@ class EmailAuthForm extends AuthForm {
         validator: (value) => validationService.validatePassword(
             value, context, authFormState.isLoginMode),
       ),
-      const SizedBox(height: AppSizes.marginMedium),
+      SizedBox(height: context.marginMedium),
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
