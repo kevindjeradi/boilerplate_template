@@ -1,0 +1,131 @@
+--- 
+description: Comprehensive Flutter development guidelines for this Riverpod-based project with GoRouter, clean architecture, and Material 3 design system.
+globs: 
+alwaysApply: true
+---
+
+## Project Architecture
+
+- Follow the existing clean architecture with features, services, controllers, and providers.
+- Use Riverpod for state management with proper provider organization.
+- Implement GoRouter for navigation following the existing pattern in app_router.dart.
+- Maintain separation between features (auth, settings, notifications, etc.).
+- Use dependency injection through Riverpod providers.
+- Follow the established folder structure: features/, shared/, core/.
+
+## Flutter Best Practices
+
+- Adapt to the project's existing Riverpod architecture and keep the code clean.
+- Use Flutter 3.x features and the Material 3 design system for modern UIs.
+- Apply clean architecture by clearly separating concerns between controllers, services, and UI.
+- Implement strong error handling using the existing error handling service.
+- Follow platform-specific design guidelines using the responsive design system.
+- Use the existing responsive extensions from responsive_sizes.dart.
+- Prioritize accessibility for all users.
+- Continuously optimize performance during development.
+
+## Riverpod Guidelines
+
+- Use ConsumerWidget instead of StatefulWidget when state management is needed.
+- Keep providers in dedicated provider files (e.g., auth_providers.dart).
+- Use proper provider lifecycle management (keepAlive when appropriate).
+- Follow the established controller pattern with NotifierProvider.
+- Use ref.watch() for reactive dependencies and ref.read() for one-time actions.
+- Implement proper error states in AsyncValue patterns.
+
+## Coding Guidelines
+
+- Use null safety; use nullable types only when necessary.
+- Maintain consistent error handling using the shared error handling service.
+- Follow naming conventions (snake_case for files, PascalCase for classes).
+- Use clear, descriptive names that follow Flutter/Dart best practices (no abbreviations, no generic names like 'data', 'item', 'thing').
+- Keep code modular and composable following the feature-based structure.
+- Use GoRouter navigation helpers from AppNavigation class.
+- Apply dependency injection through Riverpod providers to enhance testability.
+- Use the existing responsive design extensions for consistent spacing/sizing.
+- Follow the DRY principle and use existing shared widgets/services.
+- NEVER use private methods that return widgets - extract them into dedicated widget classes instead.
+- Maintain ONE class per file maximum - no multiple class definitions in a single file.
+
+## Widget Guidelines
+
+- Choose the most suitable widget for the UI context, balancing readability and performance.
+- Design widgets to do one thing well.
+- Use const constructors when possible.
+- Use keys in dynamic or list-based content to avoid unnecessary rebuilds.
+- Prefer composition over inheritance.
+- Use LayoutSwitcher for responsive desktop/mobile layouts.
+- Use existing responsive extensions (context.paddingMedium, context.marginLarge, etc.).
+- Follow accessibility best practices for widgets.
+- Extract complex widgets into dedicated classes in widgets/ folders, not private methods.
+- NEVER create private methods that return widgets (like _buildSomething()) - always create dedicated widget classes instead.
+- Widget class names should be descriptive and specific (avoid generic names like 'CustomWidget', 'MyWidget', 'ItemWidget').
+
+## State Management Guidelines
+
+- Use Riverpod providers for all state management.
+- Follow the controller pattern: UI → Controller → Service → Repository.
+- Implement proper loading, data, and error states using AsyncValue.
+- Use StateNotifier or AsyncNotifier for complex state logic.
+- Keep UI widgets pure and delegate business logic to controllers.
+- Use watch() for reactive UI updates and read() for actions.
+
+## Navigation Guidelines
+
+- Use GoRouter through the existing AppNavigation helpers.
+- Follow the route naming convention in AppRoutes class.
+- Implement proper authentication guards using the existing redirect logic.
+- Use context.go() for navigation replacement, context.push() for stacking.
+- Maintain consistent navigation patterns across features.
+
+## Performance Guidelines
+
+- Optimize asset loading using caching and lazy-loading (e.g., ListView.builder).
+- Avoid heavy computations in build methods; delegate to services or controllers.
+- Use Riverpod's reactive state management to minimize rebuilds.
+- Implement efficient animations for smooth transitions.
+- Dispose of subscriptions and controllers properly using Riverpod lifecycle.
+- Use AsyncValue for proper loading state management.
+
+## Migration and Deprecation Rules
+
+CRITICAL: The following deprecated patterns must NEVER be used and must be immediately refactored when encountered:
+
+- **Spacing in Row/Column**: ALWAYS use the 'spacing' parameter in Row and Column widgets instead of inserting manual SizedBox or Padding widgets between children. Refactor existing widgets accordingly.
+
+- **Color Opacity**: NEVER use the deprecated '.withOpacity(x)' method. ALWAYS use '.withValues(alpha: x)' method for setting color opacity.
+
+- **ColorScheme Properties**: NEVER use the deprecated ColorScheme properties 'primaryVariant' and 'secondaryVariant'. ALWAYS use 'primaryContainer' and 'secondaryContainer'.
+
+- **Typography Names**: NEVER use deprecated Material 2 typography names ('headline1', 'headline2', 'bodyText1', etc.). ALWAYS use new Material 3 typography names ('displayLarge', 'displayMedium', 'bodyLarge', etc.).
+
+- **StatefulWidget for State Management**: NEVER use StatefulWidget when Riverpod state management is needed. ALWAYS use ConsumerWidget with appropriate providers.
+
+## Mandatory Deprecation Review
+- Before completing any code modification task, perform a mandatory search for ALL deprecated patterns listed above.
+- When working on any file, always check for and fix ANY deprecated method/property usage found in that file, even if not directly related to the current task.
+- Any use of deprecated patterns must be immediately refactored to their modern equivalents.
+- This is a hard requirement with no exceptions.
+
+## Refactoring Rules
+
+- Always refactor into smaller, dedicated widget classes rather than widget-returning private methods.
+- Extracted widgets should eliminate redundancy, promoting reuse across the application.
+- Place extracted widgets in appropriate widgets/ folders within features or shared/.
+- Refactoring must NOT alter the UI appearance, application logic, or user interactions in any way.
+- Do NOT refactor if there is even a slight chance it might change logic, behavior, or visual outcomes.
+- Extracted widgets must accept parameters explicitly and remain free from side effects.
+- Preserve all existing widget keys to avoid unintended rebuilds or loss of state.
+- Follow the existing responsive design patterns when extracting widgets.
+- Provide clear inline documentation or comments if widget extraction introduces additional complexity.
+
+## Project-Specific Guidelines
+
+- Use the existing theme system from core/theme/.
+- Leverage the shared services (storage, permissions, error handling, etc.).
+- Follow the established localization pattern with AppLocalizations.
+- Use the responsive size extensions consistently across the app.
+- Maintain the feature-based architecture when adding new functionality.
+- Use the existing exception handling patterns from shared/exceptions/.
+- Follow the interface-service pattern for testability.
+- Use the established logger service for debugging and error reporting. 

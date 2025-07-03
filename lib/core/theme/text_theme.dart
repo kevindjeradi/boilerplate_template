@@ -21,13 +21,13 @@ class AppTextTheme {
     ),
     headlineMedium: GoogleFonts.roboto(
       fontSize: 28,
-      fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground,
+      fontWeight: FontWeight.w600,
+      color: AppColors.lightPrimary, // Titres en couleur primaire
     ),
     headlineSmall: GoogleFonts.roboto(
       fontSize: 24,
-      fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground,
+      fontWeight: FontWeight.w600,
+      color: AppColors.lightPrimary, // Titres en couleur primaire
     ),
     titleLarge: GoogleFonts.roboto(
       fontSize: 22,
@@ -47,12 +47,12 @@ class AppTextTheme {
     bodyLarge: GoogleFonts.roboto(
       fontSize: 16,
       fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground,
+      color: AppColors.lightOnSurfaceVariant, // Texte secondaire
     ),
     bodyMedium: GoogleFonts.roboto(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: AppColors.lightOnBackground.withValues(alpha: 0.7),
+      color: AppColors.lightOnSurfaceVariant, // Texte secondaire
     ),
     labelLarge: GoogleFonts.roboto(
       fontSize: 14,
@@ -84,13 +84,13 @@ class AppTextTheme {
     ),
     headlineMedium: GoogleFonts.roboto(
       fontSize: 28,
-      fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground,
+      fontWeight: FontWeight.w600,
+      color: AppColors.darkPrimary, // Titres en couleur primaire
     ),
     headlineSmall: GoogleFonts.roboto(
       fontSize: 24,
-      fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground,
+      fontWeight: FontWeight.w600,
+      color: AppColors.darkPrimary, // Titres en couleur primaire
     ),
     titleLarge: GoogleFonts.roboto(
       fontSize: 22,
@@ -110,12 +110,12 @@ class AppTextTheme {
     bodyLarge: GoogleFonts.roboto(
       fontSize: 16,
       fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground,
+      color: AppColors.darkOnSurfaceVariant, // Texte secondaire
     ),
     bodyMedium: GoogleFonts.roboto(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: AppColors.darkOnBackground.withValues(alpha: 0.7),
+      color: AppColors.darkOnSurfaceVariant, // Texte secondaire
     ),
     labelLarge: GoogleFonts.roboto(
       fontSize: 14,

@@ -9,6 +9,7 @@ This boilerplate template is designed to help you quickly set up a new Flutter p
 - **State Management:** Utilizing Riverpod 2.6.1 with modern patterns and code generation.
 - **Dependency Injection:** Implemented via Riverpod providers.
 - **Authentication:** Firebase Auth with phone, email, and Google sign-in.
+- **Role-Based Access Control:** Built-in user role system (user, moderator, admin) with Firestore security rules.
 - **Internationalization:** Using `flutter_localization` and `intl`. French and English by default.
 - **Theming:** Flexible theme system with light and dark modes and custom dynamic themes.
 - **Local Storage:** Persistent secure storage for sensitive data and Shared preferences for app settings.
@@ -99,6 +100,13 @@ These commands will:
 4. **Configure Google Sign-In:**
    - In **Authentication > Sign-in method > Google**
    - Copy the **Web client ID** (you'll need this for the .env file)
+   - **Enable People API for Web Platform:**
+     - Go to [Google Cloud Console APIs Library](https://console.cloud.google.com/apis/library)
+     - Make sure your Firebase project is selected
+     - Search for "People API" and click on it
+     - Click **"ENABLE"** to activate the API
+     - Wait a few minutes for the changes to propagate
+     - ⚠️ **Required for Google Sign-In on Web** - Without this, web authentication will fail with a 403 error
 
 5. **Enable Firestore Database:**
    - In the Firebase Console, navigate to **Firestore Database** and create a new database
@@ -120,6 +128,52 @@ These commands will:
      keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
      ```
    - Add these certificates in Firebase Console under **Project Settings > Your Apps > Android**
+
+### Step 6.1: Configure Firebase CLI and Deploy Security Rules (Required)
+
+This boilerplate includes a **role-based access control system** (user, moderator, admin) with Firestore security rules. You need to deploy these rules to secure your database:
+
+1. **Install Firebase CLI (if not already installed):**
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. **Login to Firebase:**
+   ```bash
+   firebase login
+   ```
+
+3. **List your Firebase projects:**
+   ```bash
+   firebase projects:list
+   ```
+
+4. **Set the active project (replace with your project ID):**
+   ```bash
+   firebase use your-project-id
+   ```
+   
+   **Example:** If your project ID is `myapp-12345`:
+   ```bash
+   firebase use myapp-12345
+   ```
+
+5. **Deploy Firestore security rules:**
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+   ✅ **Success message:** You should see "Deploy complete!" and the rules are now active.
+
+**⚠️ Important:** These security rules enforce that:
+- Users can only modify their own profile (except the `role` field)
+- Only admins can change user roles
+- Only admins can read/modify other users' profiles
+
+**🔧 Role System:** The boilerplate includes three user roles:
+- `user` (default): Standard user permissions
+- `moderator`: Reserved for future enhanced permissions  
+- `admin`: Full access to all data and can manage user roles
 
 ### Step 7: Environment Variables
 
@@ -313,6 +367,45 @@ testWidgets('My widget test', (tester) async {
   // Your test assertions
 });
 ```
+
+### Role-Based Access Control
+
+The boilerplate includes a built-in role system. Use it in your code like this:
+
+```dart
+// Check user role
+if (currentUser.role.isAdmin) {
+  // Show admin features
+}
+
+if (currentUser.role.isAdminOrModerator) {
+  // Show moderator/admin features
+}
+
+// In widgets
+class AdminButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userControllerProvider);
+    
+    return user.when(
+      data: (userData) => userData?.role.isAdmin == true
+          ? ElevatedButton(
+              onPressed: () => Navigator.push(/* AdminPanel */),
+              child: Text('Admin Panel'),
+            )
+          : SizedBox.shrink(),
+      loading: () => CircularProgressIndicator(),
+      error: (error, stack) => SizedBox.shrink(),
+    );
+  }
+}
+```
+
+**Creating the first admin:**
+1. Create a user account normally through the app
+2. In Firebase Console → Firestore → users → [user-id] → edit the `role` field to `admin`
+3. The user will now have admin privileges
 
 ### Code Generation
 

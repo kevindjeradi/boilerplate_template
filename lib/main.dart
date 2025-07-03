@@ -13,7 +13,6 @@ import 'package:boilerplate_template/core/theme/app_theme.dart';
 import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
 import 'package:boilerplate_template/firebase_options.dart';
 import 'package:boilerplate_template/core/router/app_router.dart';
-import 'package:boilerplate_template/features/auth/services/auth_effects_service.dart';
 
 void main() async {
   // Préserver le splash screen pendant l'initialisation
@@ -58,9 +57,6 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     AppLogger.info('🎨 Building MyApp widget');
-
-    // Initialiser seulement les effets d'auth (nécessaire)
-    ref.watch(authEffectsServiceProvider);
 
     // Déclencher l'init des settings en arrière-plan SANS rebuild
     ref.read(settingsControllerProvider);

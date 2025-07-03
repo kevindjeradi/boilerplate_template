@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:boilerplate_template/shared/constants/assets.dart';
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({super.key});
@@ -13,7 +14,7 @@ class LoadingScreen extends StatelessWidget {
           children: [
             // Logo de l'app
             Image.asset(
-              'assets/images/logo.png',
+              Assets.logo,
               width: 120,
               height: 120,
             ),
