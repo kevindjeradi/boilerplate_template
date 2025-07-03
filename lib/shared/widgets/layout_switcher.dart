@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
 
 /// A generic widget that switches between mobile and desktop layouts
 /// based on screen width using the desktopBreakpoint (1024px).

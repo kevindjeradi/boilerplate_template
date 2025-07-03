@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
+import 'package:boilerplate_template/shared/widgets/custom_toggle_switch.dart';
 
 class ThemeSwitch extends ConsumerWidget {
   const ThemeSwitch({super.key});
@@ -22,10 +23,14 @@ class ThemeSwitch extends ConsumerWidget {
     final isDarkMode = themeMode == ThemeMode.dark;
 
     return ListTile(
-      title: Text(localization.darkMode),
-      trailing: Switch(
-        value: isDarkMode,
-        onChanged: (bool value) {
+      leading: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
+      title:
+          Text(isDarkMode ? localization.darkTheme : localization.lightTheme),
+      trailing: CustomToggleSwitch(
+        isSecondOption: isDarkMode,
+        firstOption: const Icon(Icons.light_mode, size: 24),
+        secondOption: const Icon(Icons.dark_mode, size: 24),
+        onTap: () {
           ref.read(settingsControllerProvider.notifier).toggleTheme();
         },
       ),

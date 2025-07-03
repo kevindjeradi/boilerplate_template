@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:boilerplate_template/features/settings/controllers/settings_controller.dart';
-import 'package:boilerplate_template/features/settings/states/settings_state.dart';
+import 'package:boilerplate_template/shared/widgets/custom_toggle_switch.dart';
+import 'package:boilerplate_template/shared/constants/assets.dart';
 
 class LanguagePicker extends ConsumerWidget {
   const LanguagePicker({super.key});
@@ -19,54 +20,35 @@ class LanguagePicker extends ConsumerWidget {
       error: (_, __) => const Locale('fr'), // défaut en cas d'erreur
     );
 
+    final isFrench = currentLocale.languageCode == 'fr';
+
     return ListTile(
-      title: Text(localization.language),
-      subtitle: Text(_getLanguageName(currentLocale)),
-      trailing: const Icon(Icons.arrow_forward_ios),
-      onTap: () => _showLanguageDialog(context, ref, currentLocale),
-    );
-  }
-
-  String _getLanguageName(Locale locale) {
-    switch (locale.languageCode) {
-      case 'en':
-        return 'English';
-      case 'fr':
-        return 'Français';
-      default:
-        return 'Français';
-    }
-  }
-
-  void _showLanguageDialog(
-      BuildContext context, WidgetRef ref, Locale currentLocale) {
-    final localization = AppLocalizations.of(context)!;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(localization.selectLanguage),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: SettingsState.supportedLocales.map((locale) {
-              return RadioListTile<String>(
-                title: Text(_getLanguageName(locale)),
-                value: locale.languageCode,
-                groupValue: currentLocale.languageCode,
-                onChanged: (String? value) {
-                  if (value != null) {
-                    ref
-                        .read(settingsControllerProvider.notifier)
-                        .switchLocale(value);
-                    Navigator.of(context).pop();
-                  }
-                },
-              );
-            }).toList(),
-          ),
-        );
-      },
+      leading: Image.asset(
+        isFrench ? Assets.frFlag : Assets.gbFlag,
+        width: 26,
+        height: 20,
+        fit: BoxFit.cover,
+      ),
+      title: Text(isFrench ? localization.french : localization.english),
+      trailing: CustomToggleSwitch(
+        isSecondOption: !isFrench,
+        firstOption: Image.asset(
+          Assets.frFlag,
+          width: 22,
+          height: 16,
+          fit: BoxFit.cover,
+        ),
+        secondOption: Image.asset(
+          Assets.gbFlag,
+          width: 22,
+          height: 16,
+          fit: BoxFit.cover,
+        ),
+        onTap: () {
+          final newLocale = isFrench ? 'en' : 'fr';
+          ref.read(settingsControllerProvider.notifier).switchLocale(newLocale);
+        },
+      ),
     );
   }
 }
