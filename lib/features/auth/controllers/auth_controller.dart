@@ -28,207 +28,260 @@ class AuthFormState with _$AuthFormState {
   }) = _AuthFormState;
 }
 
-// Controller moderne avec Riverpod 3.0 - État simple AuthState (pas AsyncValue)
+// Controller d'authentification unifié - SEULE SOURCE DE VÉRITÉ
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
   late final IAuthService _authService;
   late final IUserService _userService;
   StreamSubscription<User?>? _authStateSubscription;
-
-  // Flag pour éviter les conflits lors de l'auth manuelle Google
-  bool _isManualGoogleSignInInProgress = false;
+  bool _isAuthenticating = false;
 
   @override
   AuthState build() {
-    // Initialisation des services via providers modernes
+    AppLogger.info('Initializing AuthController');
+
+    // Initialisation des services
     _authService = ref.read(authServiceProvider);
     _userService = ref.read(userServiceProvider);
 
-    // Setup du listener auth state
-    _setupAuthStateListener();
+    // Setup du listener Firebase immédiatement
+    _setupFirebaseAuthListener();
 
-    // Cleanup automatique quand le provider est disposé
+    // Cleanup automatique
     ref.onDispose(() {
+      AppLogger.info('Disposing AuthController');
       _authStateSubscription?.cancel();
     });
 
-    return const AuthState.initial();
+    // Démarrer non authentifié
+    return const AuthState.unauthenticated();
   }
 
-  void _setupAuthStateListener() {
-    _authStateSubscription =
-        _authService.authStateChanges.listen((firebaseUser) async {
-      if (!ref.exists(authControllerProvider)) return; // Guard contre dispose
+  // Setup du listener Firebase auth
+  void _setupFirebaseAuthListener() {
+    _authStateSubscription = _authService.authStateChanges.listen(
+      (firebaseUser) async {
+        if (!_canPerformOperation()) return;
 
-      // Ignorer les changements d'état pendant l'authentification Google manuelle
-      if (_isManualGoogleSignInInProgress) {
-        return;
-      }
+        // Si on est en cours d'authentification, ne pas traiter les changements d'état
+        if (_isAuthenticating) {
+          AppLogger.info('Ignoring auth state change while authenticating');
+          return;
+        }
 
-      if (firebaseUser != null) {
-        // Orchestration business : récupérer/créer UserModel
+        AppLogger.info('Firebase auth state changed: ${firebaseUser?.uid}');
+
         try {
-          final userModel = await _getOrCreateUserModel(firebaseUser);
-          if (ref.exists(authControllerProvider)) {
-            state = AuthState.authenticated(userModel.id);
+          if (firebaseUser != null) {
+            // Utilisateur connecté : récupérer/créer le UserModel
+            final userModel = await _getOrCreateUserModel(firebaseUser);
+            if (_canPerformOperation()) {
+              AppLogger.info(
+                  'User authenticated successfully: ${userModel.email}');
+              state = AuthState.authenticated(userModel);
+            }
+          } else {
+            // Utilisateur déconnecté
+            if (_canPerformOperation()) {
+              AppLogger.info('User unauthenticated');
+              state = const AuthState.unauthenticated();
+            }
           }
         } catch (e) {
-          AppLogger.error('Failed to get/create user model', e);
-          if (ref.exists(authControllerProvider)) {
+          AppLogger.error('Error handling auth state change', e);
+          if (_canPerformOperation()) {
             state = const AuthState.unauthenticated();
           }
         }
-      } else {
-        if (ref.exists(authControllerProvider)) {
+      },
+      onError: (error) {
+        AppLogger.error('Firebase auth stream error', error);
+        if (_canPerformOperation()) {
           state = const AuthState.unauthenticated();
         }
-      }
-    });
+      },
+    );
   }
 
-  // Orchestration business centralisée
+  // Orchestration business : récupérer ou créer UserModel
   Future<UserModel> _getOrCreateUserModel(User firebaseUser) async {
     UserModel? userModel = await _userService.getUser(firebaseUser.uid);
 
     if (userModel == null) {
+      // Créer un nouveau utilisateur
       userModel = UserModel(
         id: firebaseUser.uid,
         email: firebaseUser.email,
         phoneNumber: firebaseUser.phoneNumber,
         createdAt: DateTime.now(),
       );
+
       await _userService.createUser(userModel);
+      AppLogger.info('Created new user: ${userModel.email}');
     }
 
     return userModel;
   }
 
-  // MÉTHODES SIMPLIFIÉES AVEC ORCHESTRATION
+  // MÉTHODES D'AUTHENTIFICATION SIMPLIFIÉES
 
-  Future<void> authenticateWithEmail(
+  Future<AuthException?> authenticateWithEmail(
       String email, String password, bool isLoginMode) async {
-    if (!_canPerformOperation()) return;
+    if (!_canPerformOperation()) return null;
 
-    state = const AuthState.loading();
+    AppLogger.info('Authenticating with email: $email (login: $isLoginMode)');
+    _isAuthenticating = true;
 
     try {
-      final firebaseUser = isLoginMode
-          ? await _authService.signInWithEmailAndPassword(email, password)
-          : await _authService.registerWithEmailAndPassword(email, password);
+      if (isLoginMode) {
+        await _authService.signInWithEmailAndPassword(email, password);
+      } else {
+        await _authService.registerWithEmailAndPassword(email, password);
+      }
 
-      if (_canPerformOperation()) {
-        // Orchestration business
-        final userModel = await _getOrCreateUserModel(firebaseUser);
-        state = AuthState.authenticated(userModel.id);
-      }
+      // Le listener Firebase se chargera de mettre à jour l'état
+      AppLogger.info('Email authentication initiated successfully');
+      return null;
     } on AuthException catch (e) {
-      if (_canPerformOperation()) {
-        AppLogger.error('Email authentication failed', e);
-        state = const AuthState.unauthenticated();
-        rethrow;
-      }
+      AppLogger.error('Email authentication failed', e);
+      return e;
+    } catch (e) {
+      AppLogger.error('Unexpected authentication error', e);
+      return AuthException('unknown', e.toString());
+    } finally {
+      _isAuthenticating = false;
     }
   }
 
-  Future<void> signInWithGoogle() async {
-    if (!_canPerformOperation()) return;
+  Future<AuthException?> signInWithGoogle() async {
+    if (!_canPerformOperation()) return null;
 
-    state = const AuthState.loading();
-
-    // Activer le flag pour éviter les conflits avec le listener
-    _isManualGoogleSignInInProgress = true;
+    AppLogger.info('Starting Google Sign-In');
+    _isAuthenticating = true;
 
     try {
       final firebaseUser = await _authService.signInWithGoogle();
 
-      if (_canPerformOperation()) {
-        if (firebaseUser != null) {
-          // Orchestration business
-          final userModel = await _getOrCreateUserModel(firebaseUser);
-          state = AuthState.authenticated(userModel.id);
-        } else {
-          state = const AuthState.unauthenticated();
-        }
+      if (firebaseUser == null) {
+        // Utilisateur a annulé
+        AppLogger.info('Google Sign-In cancelled by user');
+        return const AuthException('cancelled', 'Sign in cancelled by user');
       }
+
+      // Attendre que le UserModel soit créé/récupéré
+      final userModel = await _getOrCreateUserModel(firebaseUser);
+      if (_canPerformOperation()) {
+        AppLogger.info('Google Sign-In successful: ${userModel.email}');
+        state = AuthState.authenticated(userModel);
+      }
+      return null;
     } on AuthException catch (e) {
-      if (_canPerformOperation()) {
-        AppLogger.error('Google Sign-In error', e);
-        state = const AuthState.unauthenticated();
-        rethrow;
-      }
+      AppLogger.error('Google Sign-In failed', e);
+      return e;
+    } catch (e) {
+      AppLogger.error('Unexpected Google Sign-In error', e);
+      return AuthException('unknown', e.toString());
     } finally {
-      // Désactiver le flag une fois l'opération terminée
-      _isManualGoogleSignInInProgress = false;
+      _isAuthenticating = false;
     }
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
-    if (!_canPerformOperation()) return;
+  Future<AuthException?> verifyPhoneNumber(String phoneNumber) async {
+    if (!_canPerformOperation()) return null;
 
-    state = const AuthState.loading();
+    AppLogger.info('Verifying phone number: $phoneNumber');
+    _isAuthenticating = true;
 
     try {
       await _authService.verifyPhoneNumber(
         phoneNumber,
         codeSent: (String verificationId) {
           if (_canPerformOperation()) {
+            AppLogger.info('SMS code sent successfully');
             state = AuthState.codeSent(verificationId);
           }
         },
         verificationFailed: (AuthException error) {
-          if (_canPerformOperation()) {
-            AppLogger.error('Phone verification failed', error);
-            state = const AuthState.unauthenticated();
-          }
+          AppLogger.error('Phone verification failed', error);
+          return error;
         },
       );
-    } on AuthException catch (e) {
-      if (_canPerformOperation()) {
-        AppLogger.error('Phone verification failed', e);
-        state = const AuthState.unauthenticated();
-        rethrow;
-      }
+      return null;
+    } catch (e) {
+      AppLogger.error('Unexpected phone verification error', e);
+      return AuthException('unknown', e.toString());
+    } finally {
+      _isAuthenticating = false;
     }
   }
 
-  Future<void> verifySmsCode(String smsCode) async {
-    if (!_canPerformOperation()) return;
+  Future<AuthException?> verifySmsCode(String smsCode) async {
+    if (!_canPerformOperation()) return null;
 
-    state = const AuthState.loading();
+    AppLogger.info('Verifying SMS code');
+    _isAuthenticating = true;
 
     try {
-      final firebaseUser = await _authService.signInWithSmsCode(smsCode);
-      if (_canPerformOperation()) {
-        // Orchestration business
-        final userModel = await _getOrCreateUserModel(firebaseUser);
-        state = AuthState.authenticated(userModel.id);
-      }
+      await _authService.signInWithSmsCode(smsCode);
+      // Le listener Firebase se chargera de mettre à jour l'état
+      AppLogger.info('SMS verification initiated successfully');
+      return null;
     } on AuthException catch (e) {
-      if (_canPerformOperation()) {
-        AppLogger.error('SMS verification failed', e);
-        state = const AuthState.unauthenticated();
-        rethrow;
-      }
+      AppLogger.error('SMS verification failed', e);
+      return e;
+    } catch (e) {
+      AppLogger.error('Unexpected SMS verification error', e);
+      return AuthException('unknown', e.toString());
+    } finally {
+      _isAuthenticating = false;
     }
   }
 
   Future<void> signOut() async {
+    if (!_canPerformOperation()) return;
+
+    AppLogger.info('Signing out user');
+
     try {
       await _authService.signOut();
-      // L'état sera mis à jour via le listener authStateChanges
+      // Le listener Firebase se chargera de mettre à jour l'état
+      AppLogger.info('Sign out initiated successfully');
     } on AuthException catch (e) {
       AppLogger.error('Sign out failed', e);
-      rethrow;
+      // En cas d'erreur de déconnexion, on force l'état unauthenticated
+      if (_canPerformOperation()) {
+        state = const AuthState.unauthenticated();
+      }
+    } catch (e) {
+      AppLogger.error('Unexpected sign out error', e);
+      if (_canPerformOperation()) {
+        state = const AuthState.unauthenticated();
+      }
     }
   }
 
+  // Reset complet (pour tests ou cas exceptionnels)
   void resetState() {
-    state = const AuthState.initial();
+    if (_canPerformOperation()) {
+      AppLogger.info('Resetting auth state');
+      state = const AuthState.initial();
+    }
   }
 
   // Guard pour vérifier si on peut encore effectuer des opérations
   bool _canPerformOperation() {
     return ref.exists(authControllerProvider);
+  }
+
+  // Méthodes utilitaires
+  bool isAuthenticated(Ref ref) {
+    final authState = ref.read(authControllerProvider);
+    return authState is AuthAuthenticated;
+  }
+
+  UserModel? currentUser(Ref ref) {
+    final authState = ref.read(authControllerProvider);
+    return authState is AuthAuthenticated ? authState.user : null;
   }
 }
 
@@ -263,21 +316,28 @@ class AuthFormController extends _$AuthFormController {
   }
 }
 
-// Helper providers simplifiés
+// Helper providers
 @riverpod
-bool isAuthenticated(Ref ref) {
-  final authState = ref.watch(authControllerProvider);
-  return authState is AuthAuthenticated;
-}
-
-@riverpod
-String? currentAuthUserId(Ref ref) {
-  final authState = ref.watch(authControllerProvider);
-  return authState is AuthAuthenticated ? authState.userId : null;
+String? currentUserId(Ref ref) {
+  return ref.watch(authControllerProvider.select((state) {
+    if (state is AuthAuthenticated) {
+      return state.user.id;
+    }
+    return null;
+  }));
 }
 
 @riverpod
 bool isAuthLoading(Ref ref) {
-  final authState = ref.watch(authControllerProvider);
-  return authState is AuthLoading;
+  return false;
+}
+
+@riverpod
+UserModel? currentUser(Ref ref) {
+  return ref.watch(authControllerProvider.select((state) {
+    if (state is AuthAuthenticated) {
+      return state.user;
+    }
+    return null;
+  }));
 }

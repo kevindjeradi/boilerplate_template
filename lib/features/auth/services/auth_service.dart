@@ -165,11 +165,8 @@ class AuthService implements IAuthService {
       AppLogger.error('Firebase error during Google Sign-In', e);
       throw _errorHandlingService.mapFirebaseAuthException(e);
     } catch (e) {
-      if (e is AuthException) {
-        rethrow;
-      }
       AppLogger.error('Unexpected error during Google Sign-In', e);
-      throw AuthException('unknown', e.toString());
+      throw AuthException('unknown-auth-error', 'unknown');
     }
   }
 

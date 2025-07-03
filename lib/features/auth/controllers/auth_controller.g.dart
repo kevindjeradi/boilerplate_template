@@ -6,41 +6,24 @@ part of 'auth_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$isAuthenticatedHash() => r'2c60129d7f793a876035e5949c0cdd611f01425c';
+String _$currentUserIdHash() => r'40187d8c0918fc6e51fd3cb43e80b21c294ac583';
 
-/// See also [isAuthenticated].
-@ProviderFor(isAuthenticated)
-final isAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
-  isAuthenticated,
-  name: r'isAuthenticatedProvider',
+/// See also [currentUserId].
+@ProviderFor(currentUserId)
+final currentUserIdProvider = AutoDisposeProvider<String?>.internal(
+  currentUserId,
+  name: r'currentUserIdProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$isAuthenticatedHash,
+      : _$currentUserIdHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef IsAuthenticatedRef = AutoDisposeProviderRef<bool>;
-String _$currentAuthUserIdHash() => r'460c3e75db08495b575abeb5b79a5ff9fca516fe';
-
-/// See also [currentAuthUserId].
-@ProviderFor(currentAuthUserId)
-final currentAuthUserIdProvider = AutoDisposeProvider<String?>.internal(
-  currentAuthUserId,
-  name: r'currentAuthUserIdProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$currentAuthUserIdHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CurrentAuthUserIdRef = AutoDisposeProviderRef<String?>;
-String _$isAuthLoadingHash() => r'b26c473803a343b9b422c50f8aef9bed045eea86';
+typedef CurrentUserIdRef = AutoDisposeProviderRef<String?>;
+String _$isAuthLoadingHash() => r'0dd32e25e1a361326b31b1b09eea80243c91ed84';
 
 /// See also [isAuthLoading].
 @ProviderFor(isAuthLoading)
@@ -57,7 +40,23 @@ final isAuthLoadingProvider = AutoDisposeProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef IsAuthLoadingRef = AutoDisposeProviderRef<bool>;
-String _$authControllerHash() => r'b2f9f1b2a2b053644f7260f5fc4034af7caee771';
+String _$currentUserHash() => r'f4f26db1af4ced2d3397a72f47554c6cc930852b';
+
+/// See also [currentUser].
+@ProviderFor(currentUser)
+final currentUserProvider = AutoDisposeProvider<UserModel?>.internal(
+  currentUser,
+  name: r'currentUserProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$currentUserHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentUserRef = AutoDisposeProviderRef<UserModel?>;
+String _$authControllerHash() => r'3b2a81ae4053711ee10c060b9e714a4a0812d958';
 
 /// See also [AuthController].
 @ProviderFor(AuthController)

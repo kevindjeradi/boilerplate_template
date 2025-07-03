@@ -1,38 +1,47 @@
 import 'package:boilerplate_template/shared/constants/responsive_sizes.dart';
-import 'package:boilerplate_template/features/auth/widgets/base_auth_form.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:boilerplate_template/features/auth/controllers/auth_controller.dart';
-import 'package:boilerplate_template/features/auth/states/auth_state.dart';
 
-abstract class AuthForm extends ConsumerWidget {
-  const AuthForm({super.key});
+class BaseAuthForm extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final String title;
+  final bool isLoading;
+  final String submitButtonText;
+  final VoidCallback onSubmit;
+  final List<Widget> children;
 
-  GlobalKey<FormState> get formKey;
-  String get title;
-  String get submitButtonText;
-  VoidCallback get onSubmit;
-  List<Widget> buildFormFields(BuildContext context, WidgetRef ref);
+  const BaseAuthForm({
+    super.key,
+    required this.formKey,
+    required this.title,
+    required this.isLoading,
+    required this.submitButtonText,
+    required this.onSubmit,
+    required this.children,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authControllerProvider);
-
-    final isLoading = authState is AuthLoading;
-
-    // Pour les erreurs, on peut les gérer via SnackBar ou d'autres moyens
-    // Ici on garde juste un message vide car les erreurs sont gérées via exceptions
-
-    return BaseAuthForm(
-      formKey: formKey,
-      title: title,
-      isLoading: isLoading,
-      submitButtonText: submitButtonText,
-      onSubmit: onSubmit,
-      children: [
-        ...buildFormFields(context, ref),
-        SizedBox(height: context.marginSmall),
-      ],
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: context.marginLarge),
+          ...children,
+          SizedBox(height: context.marginSmall),
+          ElevatedButton(
+            onPressed: isLoading ? null : onSubmit,
+            child: isLoading
+                ? const CircularProgressIndicator()
+                : Text(submitButtonText),
+          ),
+        ],
+      ),
     );
   }
 }

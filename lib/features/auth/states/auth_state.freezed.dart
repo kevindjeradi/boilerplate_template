@@ -19,8 +19,7 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
+    required TResult Function(UserModel user) authenticated,
     required TResult Function() unauthenticated,
     required TResult Function(String verificationId) codeSent,
   }) =>
@@ -28,8 +27,7 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
+    TResult? Function(UserModel user)? authenticated,
     TResult? Function()? unauthenticated,
     TResult? Function(String verificationId)? codeSent,
   }) =>
@@ -37,8 +35,7 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
+    TResult Function(UserModel user)? authenticated,
     TResult Function()? unauthenticated,
     TResult Function(String verificationId)? codeSent,
     required TResult orElse(),
@@ -47,7 +44,6 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
     required TResult Function(AuthAuthenticated value) authenticated,
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthCodeSent value) codeSent,
@@ -56,7 +52,6 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
     TResult? Function(AuthAuthenticated value)? authenticated,
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthCodeSent value)? codeSent,
@@ -65,7 +60,6 @@ mixin _$AuthState {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
     TResult Function(AuthAuthenticated value)? authenticated,
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthCodeSent value)? codeSent,
@@ -136,8 +130,7 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
+    required TResult Function(UserModel user) authenticated,
     required TResult Function() unauthenticated,
     required TResult Function(String verificationId) codeSent,
   }) {
@@ -148,8 +141,7 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
+    TResult? Function(UserModel user)? authenticated,
     TResult? Function()? unauthenticated,
     TResult? Function(String verificationId)? codeSent,
   }) {
@@ -160,8 +152,7 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
+    TResult Function(UserModel user)? authenticated,
     TResult Function()? unauthenticated,
     TResult Function(String verificationId)? codeSent,
     required TResult orElse(),
@@ -176,7 +167,6 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
     required TResult Function(AuthAuthenticated value) authenticated,
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthCodeSent value) codeSent,
@@ -188,7 +178,6 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
     TResult? Function(AuthAuthenticated value)? authenticated,
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthCodeSent value)? codeSent,
@@ -200,7 +189,6 @@ class _$AuthInitialImpl implements AuthInitial {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
     TResult Function(AuthAuthenticated value)? authenticated,
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthCodeSent value)? codeSent,
@@ -218,135 +206,14 @@ abstract class AuthInitial implements AuthState {
 }
 
 /// @nodoc
-abstract class _$$AuthLoadingImplCopyWith<$Res> {
-  factory _$$AuthLoadingImplCopyWith(
-          _$AuthLoadingImpl value, $Res Function(_$AuthLoadingImpl) then) =
-      __$$AuthLoadingImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$AuthLoadingImplCopyWithImpl<$Res>
-    extends _$AuthStateCopyWithImpl<$Res, _$AuthLoadingImpl>
-    implements _$$AuthLoadingImplCopyWith<$Res> {
-  __$$AuthLoadingImplCopyWithImpl(
-      _$AuthLoadingImpl _value, $Res Function(_$AuthLoadingImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AuthState
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-
-class _$AuthLoadingImpl implements AuthLoading {
-  const _$AuthLoadingImpl();
-
-  @override
-  String toString() {
-    return 'AuthState.loading()';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$AuthLoadingImpl);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
-    required TResult Function() unauthenticated,
-    required TResult Function(String verificationId) codeSent,
-  }) {
-    return loading();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
-    TResult? Function()? unauthenticated,
-    TResult? Function(String verificationId)? codeSent,
-  }) {
-    return loading?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
-    TResult Function()? unauthenticated,
-    TResult Function(String verificationId)? codeSent,
-    required TResult orElse(),
-  }) {
-    if (loading != null) {
-      return loading();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
-    required TResult Function(AuthAuthenticated value) authenticated,
-    required TResult Function(AuthUnauthenticated value) unauthenticated,
-    required TResult Function(AuthCodeSent value) codeSent,
-  }) {
-    return loading(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
-    TResult? Function(AuthAuthenticated value)? authenticated,
-    TResult? Function(AuthUnauthenticated value)? unauthenticated,
-    TResult? Function(AuthCodeSent value)? codeSent,
-  }) {
-    return loading?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
-    TResult Function(AuthAuthenticated value)? authenticated,
-    TResult Function(AuthUnauthenticated value)? unauthenticated,
-    TResult Function(AuthCodeSent value)? codeSent,
-    required TResult orElse(),
-  }) {
-    if (loading != null) {
-      return loading(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class AuthLoading implements AuthState {
-  const factory AuthLoading() = _$AuthLoadingImpl;
-}
-
-/// @nodoc
 abstract class _$$AuthAuthenticatedImplCopyWith<$Res> {
   factory _$$AuthAuthenticatedImplCopyWith(_$AuthAuthenticatedImpl value,
           $Res Function(_$AuthAuthenticatedImpl) then) =
       __$$AuthAuthenticatedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String userId});
+  $Res call({UserModel user});
+
+  $UserModelCopyWith<$Res> get user;
 }
 
 /// @nodoc
@@ -362,28 +229,38 @@ class __$$AuthAuthenticatedImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? userId = null,
+    Object? user = null,
   }) {
     return _then(_$AuthAuthenticatedImpl(
-      null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as String,
+      null == user
+          ? _value.user
+          : user // ignore: cast_nullable_to_non_nullable
+              as UserModel,
     ));
+  }
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $UserModelCopyWith<$Res> get user {
+    return $UserModelCopyWith<$Res>(_value.user, (value) {
+      return _then(_value.copyWith(user: value));
+    });
   }
 }
 
 /// @nodoc
 
 class _$AuthAuthenticatedImpl implements AuthAuthenticated {
-  const _$AuthAuthenticatedImpl(this.userId);
+  const _$AuthAuthenticatedImpl(this.user);
 
   @override
-  final String userId;
+  final UserModel user;
 
   @override
   String toString() {
-    return 'AuthState.authenticated(userId: $userId)';
+    return 'AuthState.authenticated(user: $user)';
   }
 
   @override
@@ -391,11 +268,11 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AuthAuthenticatedImpl &&
-            (identical(other.userId, userId) || other.userId == userId));
+            (identical(other.user, user) || other.user == user));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, userId);
+  int get hashCode => Object.hash(runtimeType, user);
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
@@ -410,38 +287,35 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
+    required TResult Function(UserModel user) authenticated,
     required TResult Function() unauthenticated,
     required TResult Function(String verificationId) codeSent,
   }) {
-    return authenticated(userId);
+    return authenticated(user);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
+    TResult? Function(UserModel user)? authenticated,
     TResult? Function()? unauthenticated,
     TResult? Function(String verificationId)? codeSent,
   }) {
-    return authenticated?.call(userId);
+    return authenticated?.call(user);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
+    TResult Function(UserModel user)? authenticated,
     TResult Function()? unauthenticated,
     TResult Function(String verificationId)? codeSent,
     required TResult orElse(),
   }) {
     if (authenticated != null) {
-      return authenticated(userId);
+      return authenticated(user);
     }
     return orElse();
   }
@@ -450,7 +324,6 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
     required TResult Function(AuthAuthenticated value) authenticated,
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthCodeSent value) codeSent,
@@ -462,7 +335,6 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
     TResult? Function(AuthAuthenticated value)? authenticated,
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthCodeSent value)? codeSent,
@@ -474,7 +346,6 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
     TResult Function(AuthAuthenticated value)? authenticated,
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthCodeSent value)? codeSent,
@@ -488,10 +359,10 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
 }
 
 abstract class AuthAuthenticated implements AuthState {
-  const factory AuthAuthenticated(final String userId) =
+  const factory AuthAuthenticated(final UserModel user) =
       _$AuthAuthenticatedImpl;
 
-  String get userId;
+  UserModel get user;
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
@@ -543,8 +414,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
+    required TResult Function(UserModel user) authenticated,
     required TResult Function() unauthenticated,
     required TResult Function(String verificationId) codeSent,
   }) {
@@ -555,8 +425,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
+    TResult? Function(UserModel user)? authenticated,
     TResult? Function()? unauthenticated,
     TResult? Function(String verificationId)? codeSent,
   }) {
@@ -567,8 +436,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
+    TResult Function(UserModel user)? authenticated,
     TResult Function()? unauthenticated,
     TResult Function(String verificationId)? codeSent,
     required TResult orElse(),
@@ -583,7 +451,6 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
     required TResult Function(AuthAuthenticated value) authenticated,
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthCodeSent value) codeSent,
@@ -595,7 +462,6 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
     TResult? Function(AuthAuthenticated value)? authenticated,
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthCodeSent value)? codeSent,
@@ -607,7 +473,6 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
     TResult Function(AuthAuthenticated value)? authenticated,
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthCodeSent value)? codeSent,
@@ -694,8 +559,7 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
-    required TResult Function(String userId) authenticated,
+    required TResult Function(UserModel user) authenticated,
     required TResult Function() unauthenticated,
     required TResult Function(String verificationId) codeSent,
   }) {
@@ -706,8 +570,7 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
-    TResult? Function(String userId)? authenticated,
+    TResult? Function(UserModel user)? authenticated,
     TResult? Function()? unauthenticated,
     TResult? Function(String verificationId)? codeSent,
   }) {
@@ -718,8 +581,7 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
-    TResult Function(String userId)? authenticated,
+    TResult Function(UserModel user)? authenticated,
     TResult Function()? unauthenticated,
     TResult Function(String verificationId)? codeSent,
     required TResult orElse(),
@@ -734,7 +596,6 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(AuthInitial value) initial,
-    required TResult Function(AuthLoading value) loading,
     required TResult Function(AuthAuthenticated value) authenticated,
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthCodeSent value) codeSent,
@@ -746,7 +607,6 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(AuthInitial value)? initial,
-    TResult? Function(AuthLoading value)? loading,
     TResult? Function(AuthAuthenticated value)? authenticated,
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthCodeSent value)? codeSent,
@@ -758,7 +618,6 @@ class _$AuthCodeSentImpl implements AuthCodeSent {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(AuthInitial value)? initial,
-    TResult Function(AuthLoading value)? loading,
     TResult Function(AuthAuthenticated value)? authenticated,
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthCodeSent value)? codeSent,
