@@ -9,25 +9,60 @@ import 'package:boilerplate_template/features/auth/states/auth_state.dart';
 import 'package:boilerplate_template/features/auth/controllers/auth_controller.dart';
 import 'package:boilerplate_template/features/auth/screens/auth_screen.dart';
 import 'package:boilerplate_template/features/settings/screens/settings_screen.dart';
+import 'package:boilerplate_template/features/admin/screens/admin_screen.dart';
 import 'package:boilerplate_template/home_screen.dart';
+import 'package:boilerplate_template/features/page1/screens/page1_screen.dart';
+import 'package:boilerplate_template/features/page2/screens/page2_screen.dart';
+import 'package:boilerplate_template/core/navigation/widgets/app_navigation_shell.dart';
 
 part 'app_router.g.dart';
 
 // Route names
 class AppRoutes {
   static const String auth = '/auth';
-  static const String home = '/';
+  static const String home = '/home';
+  static const String page1 = '/page1';
+  static const String page2 = '/page2';
+  static const String admin = '/admin';
   static const String settings = '/settings';
   static const String loading = '/loading';
-  // Écrans publics (accessibles sans auth)
-  static const Set<String> publicRoutes = {auth, loading};
+
+  // TODO: Pour ton projet, configure les routes privées ici
+  // Par défaut: admin seulement
+  // Exemples: billing, profile, settings, dashboard...
+  static const Set<String> privateRoutes = {
+    admin, // Toujours privé (admin required)
+    // settings,  // Décommenter si settings doit être privé
+    // profile,   // Ajouter selon le projet
+  };
+
+  // Routes de navigation principale (dans le shell)
+  static const Set<String> mainNavigationRoutes = {home, page1, page2, admin};
 
   // Helper methods
-  static bool isPublicRoute(String path) => publicRoutes.contains(path);
-  static bool isPrivateRoute(String path) => !isPublicRoute(path);
+  static bool isPrivateRoute(String path) => privateRoutes.contains(path);
+  static bool isPublicRoute(String path) => !isPrivateRoute(path);
+  static bool isMainNavigationRoute(String path) =>
+      mainNavigationRoutes.contains(path);
+
+  // Obtenir l'index de l'onglet depuis l'URL
+  static int getTabIndexFromPath(String path) {
+    const navigationOrder = [home, page1, page2, admin];
+    final index = navigationOrder.indexOf(path);
+    return index >= 0 ? index : 0;
+  }
+
+  // Obtenir le path depuis l'index de l'onglet
+  static String getPathFromTabIndex(int index) {
+    const navigationOrder = [home, page1, page2, admin];
+    if (index >= 0 && index < navigationOrder.length) {
+      return navigationOrder[index];
+    }
+    return home;
+  }
 }
 
-// Router réactif aux changements d'auth - approche Riverpod 3.0
+// Router réactif aux changements d'auth - unifié et simplifié
 @Riverpod(keepAlive: true)
 GoRouter router(Ref ref) {
   // Surveiller l'état d'auth pour invalidation automatique
@@ -38,50 +73,95 @@ GoRouter router(Ref ref) {
     redirect: (context, state) {
       final currentPath = state.uri.path;
 
-      return switch (authState) {
-        // État initial : laisser passer, Firebase répondra vite
-        AuthInitial() => null,
+      // Rediriger / vers /home
+      if (currentPath == '/') {
+        return AppRoutes.home;
+      }
 
-        // Authentifié mais sur écran public → rediriger vers home
-        AuthAuthenticated() when AppRoutes.isPublicRoute(currentPath) =>
-          AppRoutes.home,
+      // Pendant le loading ou l'envoi de code, on ne redirige pas
+      if (authState is AuthCodeSent) {
+        return null;
+      }
 
-        // Non authentifié mais sur écran privé → rediriger vers auth
-        AuthUnauthenticated() when AppRoutes.isPrivateRoute(currentPath) =>
-          AppRoutes.auth,
+      // Rediriger vers auth si on essaie d'accéder à une route privée sans être authentifié
+      if (AppRoutes.isPrivateRoute(currentPath) &&
+          authState is! AuthAuthenticated) {
+        return AppRoutes.auth;
+      }
 
-        // En cours de chargement d'authentification :
-        // - Si on est sur une route privée (comme /), rediriger vers auth
-        // - Sinon laisser sur la page courante
-        AuthLoading() when AppRoutes.isPrivateRoute(currentPath) =>
-          AppRoutes.auth,
-        AuthLoading() => null,
+      // Rediriger vers home si on est sur auth et qu'on est authentifié
+      if (currentPath == AppRoutes.auth && authState is AuthAuthenticated) {
+        return AppRoutes.home;
+      }
 
-        // Code SMS envoyé : si sur route privée, aller vers auth
-        AuthCodeSent() when AppRoutes.isPrivateRoute(currentPath) =>
-          AppRoutes.auth,
-        AuthCodeSent() => null,
-
-        // Tous les autres cas : pas de redirection
-        _ => null,
-      };
+      // Dans tous les autres cas, ne pas rediriger
+      return null;
     },
     routes: [
+      // Auth route séparée (sans navigation)
+      GoRoute(
+        path: AppRoutes.auth,
+        name: 'auth',
+        builder: (context, state) => const AuthScreen(),
+      ),
+
+      // Loading route (hors navigation)
       GoRoute(
         path: AppRoutes.loading,
         name: 'loading',
         builder: (context, state) => const LoadingScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.auth,
-        name: 'auth',
-        builder: (context, state) => AuthScreen(),
+
+      // Navigation principale avec StatefulShellRoute
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return AppNavigationShell(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                name: 'home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          // Branch 1: Page1
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.page1,
+                name: 'page1',
+                builder: (context, state) => const Page1Screen(),
+              ),
+            ],
+          ),
+          // Branch 2: Page2
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.page2,
+                name: 'page2',
+                builder: (context, state) => const Page2Screen(),
+              ),
+            ],
+          ),
+          // Branch 3: Admin
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.admin,
+                name: 'admin',
+                builder: (context, state) => const AdminScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
-      GoRoute(
-        path: AppRoutes.home,
-        name: 'home',
-        builder: (context, state) => const HomeScreen(),
-      ),
+
+      // Routes secondaires (hors navigation)
       GoRoute(
         path: AppRoutes.settings,
         name: 'settings',
@@ -103,7 +183,7 @@ GoRouter router(Ref ref) {
               ),
               const SizedBox(height: 8),
               Text(
-                '${state.error}',
+                'Error: ${state.error}',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -120,7 +200,7 @@ GoRouter router(Ref ref) {
   );
 }
 
-// Navigation helpers simplifiés
+// Navigation helpers
 class AppNavigation {
   static void goToAuth(BuildContext context) {
     context.go(AppRoutes.auth);
@@ -130,8 +210,41 @@ class AppNavigation {
     context.go(AppRoutes.home);
   }
 
+  static void goToPage1(BuildContext context) {
+    context.go(AppRoutes.page1);
+  }
+
+  static void goToPage2(BuildContext context) {
+    context.go(AppRoutes.page2);
+  }
+
   static void goToSettings(BuildContext context) {
-    context.push(AppRoutes.settings);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const SettingsScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.ease;
+
+          final tween = Tween(begin: begin, end: end);
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: curve,
+          );
+
+          return SlideTransition(
+            position: tween.animate(curvedAnimation),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  static void goToAdmin(BuildContext context) {
+    context.push(AppRoutes.admin);
   }
 
   static void pop(BuildContext context) {
